@@ -8,11 +8,11 @@ const Header = () => {
       <Toolbar>
         <DevicesIcon sx={{ mr: 2 }} />
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          IT Device Management System
+          IT Asset Management System
         </Typography>
         <Box sx={{ display: 'flex', gap: 1 }}>
           <Button component={RouterLink} to="/" color="inherit">Dashboard</Button>
-          <Button component={RouterLink} to="/devices" color="inherit">Devices</Button>
+          <Button component={RouterLink} to="/assets" color="inherit">Assets</Button>
           <Button color="inherit">Users</Button>
           <Button color="inherit">Reports</Button>
         </Box>

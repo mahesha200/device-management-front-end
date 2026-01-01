@@ -17,7 +17,7 @@ export default function Login() {
     }
     // In a real app, call your API here. We'll fake success.
     localStorage.setItem('dm_auth', '1');
-    navigate('/', { replace: true });
+    navigate('/' , { replace: true });
   };
 
   return (
