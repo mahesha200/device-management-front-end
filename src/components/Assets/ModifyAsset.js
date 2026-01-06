@@ -25,15 +25,13 @@ export default function ModifyAsset() {
   const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const SAMPLE_NAMES = ['Printer-01', 'Router-Edge', 'Workstation-101', 'Camera-Lobby', 'Switch-01'];
   const SAMPLE_CATEGORIES = ['Printer', 'Router', 'PC', 'Camera', 'Switch', 'Server', 'Firewall', 'Access Point'];
-  const LOCATIONS = ['Head Office', 'Ekala', 'Nugegoda', 'Galle', 'Kotte', 'Moratuwa'];
   const SAMPLE_BRANDS = ['Dell', 'HP', 'Lenovo', 'Asus', 'Cisco'];
   const DESIGNATIONS = ['Engineer', 'Manager', 'Technician', 'Clerk'];
   const DIVISIONS = ['IT', 'HR', 'Finance', 'Operations'];
   const SECTIONS = ['Section A', 'Section B', 'Section C'];
   const VENDORS = ['Vendor A', 'Vendor B', 'Vendor C'];
-  const BRANCHES = ['Head Office', 'Ekala', 'Nugegoda'];
+  const BRANCHES = ['Head Office', 'Nugegoda','Galle', 'Kotte', 'Moratuwa', 'Kelaniya' ];
   const FLOORS = ['Ground', '1st', '2nd', '3rd'];
   const STATUS_OPTIONS = ['Active', 'In Repair', 'Transferred', 'Retired'];
 
@@ -55,12 +53,24 @@ export default function ModifyAsset() {
 
   const handleModify = () => {
     if (!asset) return;
-    // simple validation for required fields
-    if (!asset.serialNumber || !asset.ip) {
-      // basic UX: show alert and prevent save
-      // consider replacing with nicer UI/validation later
-      // eslint-disable-next-line no-alert
-      alert('Serial Number and IP Address are required.');
+
+    const requiredFields = [
+      'assetNo',
+      'name',
+      'category',
+      'brand',
+      'model',
+      'serialNumber',
+      'division',
+      'branch',
+      'ip',
+      'empName',
+      'empNo',
+    ];
+
+    const missing = requiredFields.filter((f) => !asset[f]);
+    if (missing.length) {
+      alert(`Please fill required fields: ${missing.join(', ')}`);
       return;
     }
     const ds = readAssets();
@@ -86,12 +96,12 @@ export default function ModifyAsset() {
       <Paper sx={{ p: 2, maxWidth: 720 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>Modify Asset</Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-          <TextField label="Asset Number" value={asset.assetNo || ''} onChange={handleChange('assetNo')} />
-          <TextField label="PC Name" value={asset.name || ''} onChange={handleChange('name')} />
+          <TextField required label="Asset Number" value={asset.assetNo || ''} onChange={handleChange('assetNo')} />
+          <TextField required label="PC Name" value={asset.name || ''} onChange={handleChange('name')} />
           <TextField label="Date Added" type="date" InputLabelProps={{ shrink: true }} value={asset.addedDate || ''} onChange={handleChange('addedDate')} />
           <TextField label="Transfer Date" type="date" InputLabelProps={{ shrink: true }} value={asset.transferDate || ''} onChange={handleChange('transferDate')} />
-          <TextField label="Employee Number" value={asset.empNo || ''} onChange={handleChange('empNo')} />
-          <TextField label="Employee Name" value={asset.empName || ''} onChange={handleChange('empName')} />
+          <TextField required label="Employee Number" value={asset.empNo || ''} onChange={handleChange('empNo')} />
+          <TextField required label="Employee Name" value={asset.empName || ''} onChange={handleChange('empName')} />
 
           <FormControl fullWidth size="small">
             <InputLabel id="designation-label">Designation</InputLabel>
@@ -101,7 +111,7 @@ export default function ModifyAsset() {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small" required>
             <InputLabel id="division-label">Division</InputLabel>
             <Select labelId="division-label" label="Division" value={asset.division || ''} onChange={handleChange('division')}>
               <MenuItem value="">None</MenuItem>
@@ -117,7 +127,7 @@ export default function ModifyAsset() {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small" required>
             <InputLabel id="category-label">Category</InputLabel>
             <Select labelId="category-label" label="Category" value={asset.category || ''} onChange={handleChange('category')}>
               <MenuItem value="">None</MenuItem>
@@ -125,7 +135,7 @@ export default function ModifyAsset() {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small" required>
             <InputLabel id="brand-label">Brand</InputLabel>
             <Select labelId="brand-label" label="Brand" value={asset.brand || ''} onChange={handleChange('brand')}>
               <MenuItem value="">Other</MenuItem>
@@ -133,9 +143,9 @@ export default function ModifyAsset() {
             </Select>
           </FormControl>
 
-          <TextField label="Model" value={asset.model || ''} onChange={handleChange('model')} />
+          <TextField required label="Model" value={asset.model || ''} onChange={handleChange('model')} />
           <TextField required label="Serial Number" value={asset.serialNumber || ''} onChange={handleChange('serialNumber')} />
-          <TextField label="IP Address" value={asset.ip || ''} onChange={handleChange('ip')} />
+          <TextField required label="IP Address" value={asset.ip || ''} onChange={handleChange('ip')} />
 
           <TextField label="Processor" value={asset.processor || ''} onChange={handleChange('processor')} />
           <TextField label="RAM (GB)" type="number" value={asset.ram || ''} onChange={handleChange('ram')} />

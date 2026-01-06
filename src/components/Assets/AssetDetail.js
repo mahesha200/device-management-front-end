@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Box, Paper, Typography, Button } from '@mui/material';
+import { Box, Paper, Typography, Button, Grid, Divider, Chip } from '@mui/material';
 
 function readAssets() {
   try { return JSON.parse(localStorage.getItem('dm_assets') || '[]'); } catch { return []; }
@@ -20,47 +20,135 @@ export default function AssetDetail() {
     return (
       <Box sx={{ p: 3 }}>
         <Typography variant="h6">Asset not found</Typography>
-        <Button sx={{ mt: 2 }} onClick={() => navigate('/assets')}>Back to list</Button>
+        <Button 
+          sx={{ 
+            mt: 2,
+            borderRadius: 2,
+            textTransform: 'none',
+            fontWeight: 500,
+            px: 2.5
+          }} 
+          variant="contained"
+          onClick={() => navigate('/assets')}
+        >
+          Back to list
+        </Button>
       </Box>
     );
   }
 
+  const DetailRow = ({ label, value }) => (
+    <Box sx={{ py: 1.5 }}>
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: 600 }}>
+        {label}
+      </Typography>
+      <Typography variant="body1" sx={{ fontWeight: 500 }}>
+        {value || '—'}
+      </Typography>
+    </Box>
+  );
+
   return (
     <Box sx={{ p: 3 }}>
-      <Paper sx={{ p: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-          <Typography variant="h5">{asset.name}</Typography>
-          <Button component={RouterLink} to="/assets">Back</Button>
+      <Paper elevation={2} sx={{ p: 4, borderRadius: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
+              {asset.name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+              Asset No: {asset.assetNo}
+            </Typography>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <Chip 
+              label={asset.status || 'Unknown'} 
+              color={asset.status === 'Active' ? 'success' : asset.status === 'In Repair' ? 'warning' : 'default'}
+              sx={{ fontWeight: 600 }}
+            />
+            <Button 
+              component={RouterLink} 
+              to="/assets"
+              variant="outlined"
+              sx={{
+                borderRadius: 2,
+                textTransform: 'none',
+                fontWeight: 500,
+                px: 3
+              }}
+            >
+              Back to List
+            </Button>
+          </Box>
         </Box>
-        <Typography><strong>ASSET_NO:</strong> {asset.assetNo || '—'}</Typography>
-        <Typography><strong>PC_NAME:</strong> {asset.name || '—'}</Typography>
-        <Typography><strong>ADDED_DATE:</strong> {asset.addedDate || '—'}</Typography>
-        <Typography><strong>TRANSFER_DATE:</strong> {asset.transferDate || '—'}</Typography>
-        <Typography><strong>EMP_NO:</strong> {asset.empNo || '—'}</Typography>
-        <Typography><strong>EMP_NAME:</strong> {asset.empName || '—'}</Typography>
-        <Typography><strong>DESIGNATION:</strong> {asset.designation || '—'}</Typography>
-        <Typography><strong>DIVISION:</strong> {asset.division || '—'}</Typography>
-        <Typography><strong>SECTION:</strong> {asset.section || '—'}</Typography>
-        <Typography><strong>ASSET_CATEGORY:</strong> {asset.category || '—'}</Typography>
-        <Typography><strong>ASSET_BRAND:</strong> {asset.brand || '—'}</Typography>
-        <Typography><strong>ASSET_MODEL:</strong> {asset.model || '—'}</Typography>
-        <Typography><strong>ASSET_SERIAL_NO:</strong> {asset.serialNumber || '—'}</Typography>
-        <Typography><strong>ASSET_IP:</strong> {asset.ip || '—'}</Typography>
-        <Typography><strong>PROCESSOR:</strong> {asset.processor || '—'}</Typography>
-        <Typography><strong>RAM:</strong> {asset.ram || '—'}</Typography>
-        <Typography><strong>HARDDISK:</strong> {asset.harddisk || '—'}</Typography>
-        <Typography><strong>SSD:</strong> {asset.ssd || '—'}</Typography>
-        <Typography><strong>VENDOR:</strong> {asset.vendor || '—'}</Typography>
-        <Typography><strong>PURCHASED_YEAR:</strong> {asset.purchasedYear || '—'}</Typography>
-        <Typography><strong>BRANCH:</strong> {asset.branch || '—'}</Typography>
-        <Typography><strong>CSC:</strong> {asset.csc || '—'}</Typography>
-        <Typography><strong>FLOOR:</strong> {asset.floor || '—'}</Typography>
-        <Typography><strong>REMARKS:</strong> {asset.remarks || '—'}</Typography>
-        <Typography><strong>MAINTENANCE_WARRANTY:</strong> {asset.maintenanceWarranty || '—'}</Typography>
-        <Typography><strong>MAINTENANCE_WARRANTY_STARTDATE:</strong> {asset.maintenanceWarrantyStartDate || '—'}</Typography>
-        <Typography><strong>MAINTENANCE_WARRANTY_ENDDATE:</strong> {asset.maintenanceWarrantyEndDate || '—'}</Typography>
-        <Typography><strong>STATUS:</strong> {asset.status || '—'}</Typography>
-        <Typography><strong>DATE_OF_STATUS:</strong> {asset.dateOfStatus || '—'}</Typography>
+
+        <Divider sx={{ mb: 3 }} />
+
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+              Basic Information
+            </Typography>
+            <DetailRow label="PC / Asset Name" value={asset.name} />
+            <DetailRow label="Category" value={asset.category} />
+            <DetailRow label="Brand" value={asset.brand} />
+            <DetailRow label="Model" value={asset.model} />
+            <DetailRow label="Serial Number" value={asset.serialNumber} />
+            <DetailRow label="IP Address" value={asset.ip} />
+            <DetailRow label="Added Date" value={asset.addedDate} />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+              Employee Information
+            </Typography>
+            <DetailRow label="Employee No" value={asset.empNo} />
+            <DetailRow label="Employee Name" value={asset.empName} />
+            <DetailRow label="Designation" value={asset.designation} />
+            <DetailRow label="Division" value={asset.division} />
+            <DetailRow label="Section" value={asset.section} />
+            <DetailRow label="Transfer Date" value={asset.transferDate} />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+              Technical Specifications
+            </Typography>
+            <DetailRow label="Processor" value={asset.processor} />
+            <DetailRow label="RAM" value={asset.ram} />
+            <DetailRow label="Hard Disk" value={asset.harddisk} />
+            <DetailRow label="SSD" value={asset.ssd} />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+              Location Details
+            </Typography>
+            <DetailRow label="Branch" value={asset.branch} />
+            <DetailRow label="CSC" value={asset.csc} />
+            <DetailRow label="Floor" value={asset.floor} />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+              Purchase & Warranty
+            </Typography>
+            <DetailRow label="Vendor" value={asset.vendor} />
+            <DetailRow label="Purchased Year" value={asset.purchasedYear} />
+            <DetailRow label="Maintenance Warranty" value={asset.maintenanceWarranty} />
+            <DetailRow label="Warranty Start Date" value={asset.maintenanceWarrantyStartDate} />
+            <DetailRow label="Warranty End Date" value={asset.maintenanceWarrantyEndDate} />
+          </Grid>
+
+          <Grid item xs={12} md={6}>
+            <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+              Status & Remarks
+            </Typography>
+            <DetailRow label="Status" value={asset.status} />
+            <DetailRow label="Date of Status" value={asset.dateOfStatus} />
+            <DetailRow label="Remarks" value={asset.remarks} />
+          </Grid>
+        </Grid>
       </Paper>
     </Box>
   );

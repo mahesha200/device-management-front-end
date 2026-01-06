@@ -23,27 +23,27 @@ function Dashboard() {
               value={2}
               icon={<DevicesIcon fontSize="large" />}
               color="#dc2626"
-                to="/assets"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
-              title="Network Equipment"
-              value={10}
-              icon={<DevicesIcon fontSize="large" />}
-              color="#2563eb"
-                to="/assets"
+              to="/assets?department=IT"
             />
           </Grid>
 
           <Grid item xs={12} sm={6} md={3}>
             <StatsCard
               title="Server Equipment"
+              value={10}
+              icon={<DevicesIcon fontSize="large" />}
+              color="#2563eb"
+              to="/assets?department=Engineering"
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <StatsCard
+              title="Finance Equipment"
               value={5}
               icon={<DevicesIcon fontSize="large" />}
               color="#16a34a"
-                to="/assets"
+              to="/assets?department=Finance"
             />
           </Grid>
 
@@ -53,7 +53,7 @@ function Dashboard() {
               value={7}
               icon={<DevicesIcon fontSize="large" />}
               color="#ca8a04"
-                to="/assets"
+              to="/assets?department=Infrastructure"
             />
           </Grid>
         </Grid>
