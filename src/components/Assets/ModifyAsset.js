@@ -93,7 +93,7 @@ export default function ModifyAsset() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Paper sx={{ p: 2, maxWidth: 720 }}>
+      <Paper sx={{ p: 3, maxWidth: 900 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>Modify Asset</Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
           <TextField required label="Asset Number" value={asset.assetNo || ''} onChange={handleChange('assetNo')} />

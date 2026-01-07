@@ -1,21 +1,20 @@
-import { AppBar, Toolbar, Typography, Box, Button } from '@mui/material';
-import DevicesIcon from '@mui/icons-material/Devices';
-import { Link as RouterLink } from 'react-router-dom';
+import { AppBar, Toolbar, Typography } from '@mui/material';
 
 const Header = () => {
   return (
-    <AppBar position="static" sx={{ backgroundColor: '#1e3a8a' }}>
+    <AppBar 
+      position="fixed" 
+      sx={{ 
+        backgroundColor: '#4d1d4f',
+        zIndex: (theme) => theme.zIndex.drawer + 1,
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        borderBottom: '3px solid #fff100'
+      }}
+    >
       <Toolbar>
-        <DevicesIcon sx={{ mr: 2 }} />
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-          IT Asset Management System
+        <Typography variant="h6" component="div" sx={{ fontWeight: 600, color: '#fff100' }}>
+          Device Management System
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Button component={RouterLink} to="/" color="inherit">Dashboard</Button>
-          <Button component={RouterLink} to="/assets" color="inherit">Assets</Button>
-          <Button color="inherit">Users</Button>
-          <Button color="inherit">Reports</Button>
-        </Box>
       </Toolbar>
     </AppBar>
   );

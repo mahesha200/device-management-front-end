@@ -630,8 +630,8 @@ export default function AssetsList() {
       </Typography>
 
       {/* Filters */}
-      <Box sx={{ display: 'flex', gap: 6, flexWrap: 'wrap', mb: 2, justifyContent: 'flex-start', ml: 12 }}>
-        <FormControl size="small" sx={{ minWidth: 120 }}>
+      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>Division</InputLabel>
           <Select
             value={filters.division}
@@ -642,7 +642,7 @@ export default function AssetsList() {
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 120 }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>Category</InputLabel>
           <Select
             value={filters.category}
@@ -653,7 +653,7 @@ export default function AssetsList() {
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 120 }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>Brand</InputLabel>
           <Select
             value={filters.brand}
@@ -664,7 +664,7 @@ export default function AssetsList() {
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 120 }}>
+        <FormControl size="small" sx={{ minWidth: 160 }}>
           <InputLabel>Floor</InputLabel>
           <Select
             value={filters.floor}
@@ -682,17 +682,9 @@ export default function AssetsList() {
             setFilters({ division: '', category: '', brand: '', floor: '' });
             setPage(0);
           }}
+          sx={{ minWidth: 120 }}
         >
           Reset Filters
-        </Button>
-
-        <Button
-          size="small"
-          variant="contained"
-          component={RouterLink}
-          to="/assets/add"
-        >
-          Add Asset
         </Button>
       </Box>
 
