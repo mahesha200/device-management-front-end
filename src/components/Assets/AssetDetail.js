@@ -1,25 +1,50 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Box, Paper, Typography, Button, Grid, Divider, Chip } from '@mui/material';
-
-function readAssets() {
-  try { return JSON.parse(localStorage.getItem('dm_assets') || '[]'); } catch { return []; }
-}
+import { Box, Paper, Typography, Button, Grid, Divider, Chip, CircularProgress } from '@mui/material';
 
 export default function AssetDetail() {
   const { id } = useParams();
   const [asset, setAsset] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const a = readAssets().find((d) => String(d.id) === String(id));
-    setAsset(a || null);
+  const fetchAssetDetails = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(`http://localhost:5000/api/assets/${id}`);
+      const result = await response.json();
+      
+      if (result.success) {
+        setAsset(result.data);
+      } else {
+        setError(result.message || 'Asset not found');
+      }
+    } catch (err) {
+      console.error('Error fetching asset details:', err);
+      setError('Failed to fetch asset details');
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
-  if (!asset) {
+  useEffect(() => {
+    fetchAssetDetails();
+  }, [fetchAssetDetails]);
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error || !asset) {
     return (
       <Box sx={{ p: 3 }}>
-        <Typography variant="h6">Asset not found</Typography>
+        <Typography variant="h6">{error || 'Asset not found'}</Typography>
         <Button 
           sx={{ 
             mt: 2,
@@ -54,7 +79,7 @@ export default function AssetDetail() {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
-              {asset.name}
+              {asset.pcName}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               Asset No: {asset.assetNo}
@@ -63,7 +88,7 @@ export default function AssetDetail() {
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Chip 
               label={asset.status || 'Unknown'} 
-              color={asset.status === 'Active' ? 'success' : asset.status === 'In Repair' ? 'warning' : 'default'}
+              color={asset.status === 'A' ? 'success' : asset.status === 'R' ? 'warning' : 'default'}
               sx={{ fontWeight: 600 }}
             />
             <Button 
@@ -89,13 +114,13 @@ export default function AssetDetail() {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
               Basic Information
             </Typography>
-            <DetailRow label="PC / Asset Name" value={asset.name} />
-            <DetailRow label="Category" value={asset.category} />
-            <DetailRow label="Brand" value={asset.brand} />
-            <DetailRow label="Model" value={asset.model} />
-            <DetailRow label="Serial Number" value={asset.serialNumber} />
-            <DetailRow label="IP Address" value={asset.ip} />
-            <DetailRow label="Added Date" value={asset.addedDate} />
+            <DetailRow label="PC / Asset Name" value={asset.pcName} />
+            <DetailRow label="Category" value={asset.assetCategory} />
+            <DetailRow label="Brand" value={asset.assetBrand} />
+            <DetailRow label="Model" value={asset.assetModel} />
+            <DetailRow label="Serial Number" value={asset.assetSerialNo} />
+            <DetailRow label="IP Address" value={asset.assetIp} />
+            <DetailRow label="Added Date" value={asset.addedDate ? new Date(asset.addedDate).toLocaleDateString() : '—'} />
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -107,7 +132,7 @@ export default function AssetDetail() {
             <DetailRow label="Designation" value={asset.designation} />
             <DetailRow label="Division" value={asset.division} />
             <DetailRow label="Section" value={asset.section} />
-            <DetailRow label="Transfer Date" value={asset.transferDate} />
+            <DetailRow label="Transfer Date" value={asset.transferDate ? new Date(asset.transferDate).toLocaleDateString() : '—'} />
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -136,8 +161,8 @@ export default function AssetDetail() {
             <DetailRow label="Vendor" value={asset.vendor} />
             <DetailRow label="Purchased Year" value={asset.purchasedYear} />
             <DetailRow label="Maintenance Warranty" value={asset.maintenanceWarranty} />
-            <DetailRow label="Warranty Start Date" value={asset.maintenanceWarrantyStartDate} />
-            <DetailRow label="Warranty End Date" value={asset.maintenanceWarrantyEndDate} />
+            <DetailRow label="Warranty Start Date" value={asset.maintenanceWarrantyStartDate ? new Date(asset.maintenanceWarrantyStartDate).toLocaleDateString() : '—'} />
+            <DetailRow label="Warranty End Date" value={asset.maintenanceWarrantyEndDate ? new Date(asset.maintenanceWarrantyEndDate).toLocaleDateString() : '—'} />
           </Grid>
 
           <Grid item xs={12} md={6}>
@@ -145,7 +170,7 @@ export default function AssetDetail() {
               Status & Remarks
             </Typography>
             <DetailRow label="Status" value={asset.status} />
-            <DetailRow label="Date of Status" value={asset.dateOfStatus} />
+            <DetailRow label="Date of Status" value={asset.dateOfStatus ? new Date(asset.dateOfStatus).toLocaleDateString() : '—'} />
             <DetailRow label="Remarks" value={asset.remarks} />
           </Grid>
         </Grid>
