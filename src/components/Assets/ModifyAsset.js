@@ -2,28 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Paper, TextField, Button, Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
-function readAssets() {
-  try {
-    const raw = localStorage.getItem('dm_assets');
-    return raw ? JSON.parse(raw) : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function writeAssets(list) {
-  try {
-    localStorage.setItem('dm_assets', JSON.stringify(list));
-  } catch (e) {
-    // ignore
-  }
-}
+const API_BASE_URL = 'http://localhost:5000/api';
 
 export default function ModifyAsset() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const SAMPLE_CATEGORIES = ['Printer', 'Router', 'PC', 'Camera', 'Switch', 'Server', 'Firewall', 'Access Point'];
   const SAMPLE_BRANDS = ['Dell', 'HP', 'Lenovo', 'Asus', 'Cisco'];
@@ -36,22 +22,75 @@ export default function ModifyAsset() {
   const STATUS_OPTIONS = ['Active', 'In Repair', 'Transferred', 'Retired'];
 
   useEffect(() => {
-    const ds = readAssets();
-    const found = ds.find((d) => String(d.id) === String(id));
-    if (!found) {
-      setAsset(null);
-      setLoading(false);
-      return;
+    const fetchAsset = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/assets/${id}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            setAsset(null);
+            setError('Asset not found');
+          } else {
+            throw new Error(`Failed to fetch asset: ${response.statusText}`);
+          }
+        } else {
+          const data = await response.json();
+          // Map backend field names to frontend field names
+          const backendAsset = data.data;
+          const mappedAsset = {
+            assetNo: backendAsset.assetNo,
+            name: backendAsset.pcName,
+            addedDate: backendAsset.addedDate ? backendAsset.addedDate.split('T')[0] : '',
+            transferDate: backendAsset.transferDate ? backendAsset.transferDate.split('T')[0] : '',
+            empNo: backendAsset.empNo,
+            empName: backendAsset.empName,
+            designation: backendAsset.designation,
+            division: backendAsset.division,
+            section: backendAsset.section,
+            category: backendAsset.assetCategory,
+            brand: backendAsset.assetBrand,
+            model: backendAsset.assetModel,
+            serialNumber: backendAsset.assetSerialNo,
+            ip: backendAsset.assetIp,
+            processor: backendAsset.processor,
+            ram: backendAsset.ram,
+            harddisk: backendAsset.harddisk,
+            ssd: backendAsset.ssd,
+            vendor: backendAsset.vendor,
+            purchasedYear: backendAsset.purchasedYear,
+            branch: backendAsset.branch,
+            csc: backendAsset.csc,
+            floor: backendAsset.floor,
+            remarks: backendAsset.remarks,
+            maintenanceWarranty: backendAsset.maintenanceWarranty,
+            maintenanceWarrantyStartDate: backendAsset.maintenanceWarrantyStartDate ? backendAsset.maintenanceWarrantyStartDate.split('T')[0] : '',
+            maintenanceWarrantyEndDate: backendAsset.maintenanceWarrantyEndDate ? backendAsset.maintenanceWarrantyEndDate.split('T')[0] : '',
+            status: backendAsset.status,
+            dateOfStatus: backendAsset.dateOfStatus ? backendAsset.dateOfStatus.split('T')[0] : ''
+          };
+          setAsset(mappedAsset);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error fetching asset:', err);
+        setError(err.message);
+        setAsset(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchAsset();
     }
-    setAsset(found);
-    setLoading(false);
   }, [id]);
 
   const handleChange = (field) => (e) => {
     setAsset({ ...asset, [field]: e.target.value });
   };
 
-  const handleModify = () => {
+  const handleModify = async () => {
     if (!asset) return;
 
     const requiredFields = [
@@ -73,20 +112,72 @@ export default function ModifyAsset() {
       alert(`Please fill required fields: ${missing.join(', ')}`);
       return;
     }
-    const ds = readAssets();
-    const idx = ds.findIndex((d) => String(d.id) === String(id));
-    if (idx === -1) return;
-    const next = [...ds];
-    next[idx] = asset;
-    writeAssets(next);
-    navigate('/assets');
+
+    try {
+      // Map frontend field names to backend field names
+      const backendPayload = {
+        assetNo: asset.assetNo,
+        pcName: asset.name,
+        addedDate: asset.addedDate || null,
+        transferDate: asset.transferDate || null,
+        empNo: asset.empNo,
+        empName: asset.empName,
+        designation: asset.designation || null,
+        division: asset.division,
+        section: asset.section || null,
+        assetCategory: asset.category,
+        assetBrand: asset.brand,
+        assetModel: asset.model,
+        assetSerialNo: asset.serialNumber,
+        assetIp: asset.ip,
+        processor: asset.processor || null,
+        ram: asset.ram || null,
+        harddisk: asset.harddisk || null,
+        ssd: asset.ssd || null,
+        vendor: asset.vendor || null,
+        purchasedYear: asset.purchasedYear || null,
+        branch: asset.branch,
+        csc: asset.csc || null,
+        floor: asset.floor || null,
+        remarks: asset.remarks || null,
+        maintenanceWarranty: asset.maintenanceWarranty || 'No',
+        maintenanceWarrantyStartDate: asset.maintenanceWarrantyStartDate || null,
+        maintenanceWarrantyEndDate: asset.maintenanceWarrantyEndDate || null,
+        status: asset.status || 'Active',
+        dateOfStatus: asset.dateOfStatus || null
+      };
+
+      const response = await fetch(`${API_BASE_URL}/assets/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(backendPayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `Failed to update asset: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      alert('Asset updated successfully!');
+      navigate('/assets');
+    } catch (err) {
+      console.error('Error updating asset:', err);
+      alert(`Failed to update asset: ${err.message}`);
+    }
   };
 
-  if (loading) return null;
-
-  if (!asset) return (
+  if (loading) return (
     <Box sx={{ p: 3 }}>
-      <Typography>Asset not found.</Typography>
+      <Typography>Loading...</Typography>
+    </Box>
+  );
+
+  if (error || !asset) return (
+    <Box sx={{ p: 3 }}>
+      <Typography color="error">{error || 'Asset not found.'}</Typography>
       <Button sx={{ mt: 2 }} onClick={() => navigate('/assets')}>Back</Button>
     </Box>
   );

@@ -1,6 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Box, Paper, Typography, Button, Grid, Divider, Chip, CircularProgress } from '@mui/material';
+import { Box, Paper, Typography, Button, Grid, Divider, Chip } from '@mui/material';
+
+const API_BASE_URL = 'http://localhost:5000/api';
 
 export default function AssetDetail() {
   const { id } = useParams();
@@ -9,34 +11,42 @@ export default function AssetDetail() {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  const fetchAssetDetails = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`http://localhost:5000/api/assets/${id}`);
-      const result = await response.json();
-      
-      if (result.success) {
-        setAsset(result.data);
-      } else {
-        setError(result.message || 'Asset not found');
+  useEffect(() => {
+    const fetchAsset = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${API_BASE_URL}/assets/${id}`);
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            setAsset(null);
+            setError('Asset not found');
+          } else {
+            throw new Error(`Failed to fetch asset: ${response.statusText}`);
+          }
+        } else {
+          const data = await response.json();
+          setAsset(data.data);
+          setError(null);
+        }
+      } catch (err) {
+        console.error('Error fetching asset:', err);
+        setError(err.message);
+        setAsset(null);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Error fetching asset details:', err);
-      setError('Failed to fetch asset details');
-    } finally {
-      setLoading(false);
+    };
+
+    if (id) {
+      fetchAsset();
     }
   }, [id]);
 
-  useEffect(() => {
-    fetchAssetDetails();
-  }, [fetchAssetDetails]);
-
   if (loading) {
     return (
-      <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <CircularProgress />
+      <Box sx={{ p: 3 }}>
+        <Typography>Loading...</Typography>
       </Box>
     );
   }
@@ -44,7 +54,7 @@ export default function AssetDetail() {
   if (error || !asset) {
     return (
       <Box sx={{ p: 3 }}>
-        <Typography variant="h6">{error || 'Asset not found'}</Typography>
+        <Typography variant="h6" color="error">{error || 'Asset not found'}</Typography>
         <Button 
           sx={{ 
             mt: 2,
@@ -79,7 +89,7 @@ export default function AssetDetail() {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
-              {asset.pcName}
+              {asset.name}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               Asset No: {asset.assetNo}
@@ -88,7 +98,7 @@ export default function AssetDetail() {
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Chip 
               label={asset.status || 'Unknown'} 
-              color={asset.status === 'A' ? 'success' : asset.status === 'R' ? 'warning' : 'default'}
+              color={asset.status === 'Active' ? 'success' : asset.status === 'In Repair' ? 'warning' : 'default'}
               sx={{ fontWeight: 600 }}
             />
             <Button 
@@ -114,12 +124,12 @@ export default function AssetDetail() {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
               Basic Information
             </Typography>
-            <DetailRow label="PC / Asset Name" value={asset.pcName} />
-            <DetailRow label="Category" value={asset.assetCategory} />
-            <DetailRow label="Brand" value={asset.assetBrand} />
-            <DetailRow label="Model" value={asset.assetModel} />
-            <DetailRow label="Serial Number" value={asset.assetSerialNo} />
-            <DetailRow label="IP Address" value={asset.assetIp} />
+            <DetailRow label="PC / Asset Name" value={asset.name} />
+            <DetailRow label="Category" value={asset.category} />
+            <DetailRow label="Brand" value={asset.brand} />
+            <DetailRow label="Model" value={asset.model} />
+            <DetailRow label="Serial Number" value={asset.serialNumber} />
+            <DetailRow label="IP Address" value={asset.ip} />
             <DetailRow label="Added Date" value={asset.addedDate ? new Date(asset.addedDate).toLocaleDateString() : '—'} />
           </Grid>
 

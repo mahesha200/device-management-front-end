@@ -19,6 +19,9 @@ import {
 } from '@mui/material';
 import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 
+/* -------------------- Helper -------------------- */
+const displayValue = (value) => value || 'N/A';
+
 /* -------------------- Component -------------------- */
 export default function AssetsList() {
   const [assets, setAssets] = useState([]);
@@ -69,19 +72,31 @@ export default function AssetsList() {
   /* -------------------- Derived Dropdown Values -------------------- */
   const divisions = useMemo(
     () => {
-      const excludedDivisions = ['IT', 'Infrastructure', 'Engineering', 'Finance', 'HR'];
-      return [...new Set(assets.map(a => a.division).filter(d => d && !excludedDivisions.includes(d)))];
+      const predefinedDivisions = ['ADM', 'CSC', 'KL', 'FIN', 'ACT', 'ENG', 'IT'];
+      const assetDivisions = [...new Set(assets.map(a => a.division).filter(Boolean))];
+      // Combine predefined and asset divisions, remove duplicates
+      return [...new Set([...predefinedDivisions, ...assetDivisions])];
     },
     [assets]
   );
 
   const categories = useMemo(
-    () => [...new Set(assets.map(a => a.category).filter(Boolean))],
+    () => {
+      const predefinedCategories = ['CMP', 'MON', 'SCN', 'PRT'];
+      const assetCategories = [...new Set(assets.map(a => a.assetCategory).filter(Boolean))];
+      // Combine predefined and asset categories, remove duplicates
+      return [...new Set([...predefinedCategories, ...assetCategories])];
+    },
     [assets]
   );
 
   const brands = useMemo(
-    () => [...new Set(assets.map(a => a.brand).filter(Boolean))],
+    () => {
+      const predefinedBrands = ['EWIS', 'EPSON', 'HP', 'BROTHER', 'CANON'];
+      const assetBrands = [...new Set(assets.map(a => a.assetBrand).filter(Boolean))];
+      // Combine predefined and asset brands, remove duplicates
+      return [...new Set([...predefinedBrands, ...assetBrands])];
+    },
     [assets]
   );
 
@@ -192,7 +207,7 @@ export default function AssetsList() {
       </Box>
 
       {/* Table */}
-      <TableContainer component={Paper}>
+      <TableContainer component={Paper} sx={{ overflow: 'hidden' }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -219,10 +234,10 @@ export default function AssetsList() {
             ) : (
               filtered.map((a, index) => (
                 <TableRow key={a.assetNo || `asset-${index}`} hover>
-                  <TableCell>{a.assetNo}</TableCell>
-                  <TableCell>{a.pcName}</TableCell>
-                  <TableCell>{a.assetCategory}</TableCell>
-                  <TableCell>{a.assetBrand}</TableCell>
+                  <TableCell>{displayValue(a.assetNo)}</TableCell>
+                  <TableCell>{displayValue(a.pcName)}</TableCell>
+                  <TableCell>{displayValue(a.assetCategory)}</TableCell>
+                  <TableCell>{displayValue(a.assetBrand)}</TableCell>
 
                   <TableCell
                     onClick={() => startEditCell(a.assetNo, 'assetSerialNo', a.assetSerialNo)}
@@ -240,11 +255,11 @@ export default function AssetsList() {
                         }
                         onBlur={() => saveCell(a.assetNo, 'assetSerialNo')}
                       />
-                    ) : a.assetSerialNo}
+                    ) : displayValue(a.assetSerialNo)}
                   </TableCell>
 
-                  <TableCell>{a.assetIp}</TableCell>
-                  <TableCell>{a.status}</TableCell>
+                  <TableCell>{displayValue(a.assetIp)}</TableCell>
+                  <TableCell>{displayValue(a.status)}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 2 }}>
                       <Button

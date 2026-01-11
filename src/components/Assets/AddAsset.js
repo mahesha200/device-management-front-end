@@ -12,25 +12,19 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-/* ---------------- Helpers ---------------- */
-function readAssets() {
-  try {
-    return JSON.parse(localStorage.getItem('dm_assets') || '[]');
-  } catch {
-    return [];
-  }
-}
+const API_BASE_URL = 'http://localhost:5000/api';
 
 /* ---------------- Dropdown Data ---------------- */
 const CATEGORIES = ['Printer', 'Router', 'PC', 'Camera', 'Switch', 'Server', 'Firewall', 'Access Point'];
 const BRANDS = ['Dell', 'HP', 'Lenovo', 'Asus', 'Cisco'];
 const DESIGNATIONS = ['Engineer', 'Manager', 'Technician', 'Clerk'];
 const DIVISIONS = ['IT', 'HR', 'Finance', 'Operations'];
-const SECTIONS = ['Section A', 'Section B', 'Section C'];
-const VENDORS = ['Vendor A', 'Vendor B', 'Vendor C'];
+const SECTIONS = ['PLRD','PRJ','CSD','SUP','IT','TES','CON','ADM','STR'];
+const VENDORS = ['EWIS', 'METRO', 'DEBUG','VSIS',''];
 const BRANCHES = ['Head Office', 'Nugegoda', 'Galle', 'Kotte', 'Moratuwa', 'Kelaniya'];
-const FLOORS = ['Ground', '1st', '2nd', '3rd'];
+const FLOORS = [ '1st', '2nd', '3rd','4th'];
 const STATUS_OPTIONS = ['Active', 'In Repair', 'Transferred', 'Retired'];
+const YEARS = Array.from({ length: 27 }, (_, i) => 2026 - i); // 2026 down to 2000
 
 /* ---------------- Component ---------------- */
 export default function AddAsset() {
@@ -71,48 +65,67 @@ export default function AddAsset() {
   const handleChange = (field) => (e) =>
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const assets = readAssets();
-
     const newAsset = {
-      id: Date.now().toString(),
       assetNo: form.assetNo,
-      name: form.name,
-      addedDate: form.addedDate,
-      transferDate: form.transferDate,
+      pcName: form.name,
+      addedDate: form.addedDate || null,
+      transferDate: form.transferDate || null,
       empNo: form.empNumber,
       empName: form.empName,
       designation: form.designation,
       division: form.division,
-      department: form.division, // used for URL filter
       section: form.section,
-      category: form.category,
-      brand: form.brand,
-      model: form.model,
-      serialNumber: form.serialNumber,
-      ip: form.ip,
+      assetCategory: form.category,
+      assetBrand: form.brand,
+      assetModel: form.model,
+      assetSerialNo: form.serialNumber,
+      assetIp: form.ip,
       processor: form.processor,
-      ram: form.ram,
-      harddisk: form.harddisk,
-      ssd: form.ssd,
+      ram: form.ram ? parseInt(form.ram) : null,
+      harddisk: form.harddisk ? parseInt(form.harddisk) : null,
+      ssd: form.ssd ? parseInt(form.ssd) : null,
       vendor: form.vendor,
-      purchasedYear: form.purchasedYear,
+      purchasedYear: form.purchasedYear ? parseInt(form.purchasedYear) : null,
       branch: form.branch,
       csc: form.csc,
       floor: form.floor,
       remarks: form.remarks,
-      maintenanceWarranty: form.maintenanceWarranty,
-      maintenanceWarrantyStartDate: form.maintenanceWarrantyStartDate,
-      maintenanceWarrantyEndDate: form.maintenanceWarrantyEndDate,
-      status: form.status,
-      dateOfStatus: form.dateOfStatus,
+      maintenanceWarranty: form.maintenanceWarranty === 'Yes' ? 'Y' : 'N',
+      maintenanceWarrantyStartDate: form.maintenanceWarrantyStartDate || null,
+      maintenanceWarrantyEndDate: form.maintenanceWarrantyEndDate || null,
+      // Convert status to single character: A=Active, I=In Repair, T=Transferred, R=Retired
+      status: form.status === 'Active' ? 'A' : form.status === 'In Repair' ? 'I' : form.status === 'Transferred' ? 'T' : form.status === 'Retired' ? 'R' : 'A',
+      dateOfStatus: form.dateOfStatus || null,
     };
 
-    assets.unshift(newAsset);
-    localStorage.setItem('dm_assets', JSON.stringify(assets));
-    navigate('/assets');
+    try {
+      const response = await fetch(`${API_BASE_URL}/assets`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newAsset),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `Failed to create asset: ${response.statusText}`);
+      }
+
+      if (data.success) {
+        alert('Asset created successfully!');
+        navigate('/assets');
+      } else {
+        throw new Error(data.message || 'Failed to create asset');
+      }
+    } catch (err) {
+      console.error('Error creating asset:', err);
+      alert(`Failed to create asset: ${err.message}`);
+    }
   };
 
   return (
@@ -180,9 +193,9 @@ export default function AddAsset() {
           <TextField label="IP Address" required value={form.ip} onChange={handleChange('ip')} />
 
           <TextField label="Processor" value={form.processor} onChange={handleChange('processor')} />
-          <TextField label="RAM (GB)" type="number" value={form.ram} onChange={handleChange('ram')} />
-          <TextField label="Hard Disk (GB)" type="number" value={form.harddisk} onChange={handleChange('harddisk')} />
-          <TextField label="SSD (GB)" type="number" value={form.ssd} onChange={handleChange('ssd')} />
+          <TextField label="RAM (GB)" type="number" inputProps={{ min: 0 }} value={form.ram} onChange={handleChange('ram')} />
+          <TextField label="Hard Disk (GB)" type="number" inputProps={{ min: 0 }} value={form.harddisk} onChange={handleChange('harddisk')} />
+          <TextField label="SSD (GB)" type="number" inputProps={{ min: 0 }} value={form.ssd} onChange={handleChange('ssd')} />
 
           <FormControl fullWidth size="small">
             <InputLabel>Vendor</InputLabel>
@@ -192,7 +205,13 @@ export default function AddAsset() {
             </Select>
           </FormControl>
 
-          <TextField label="Purchased Year" type="number" value={form.purchasedYear} onChange={handleChange('purchasedYear')} />
+          <FormControl fullWidth size="small">
+            <InputLabel>Purchased Year</InputLabel>
+            <Select label="Purchased Year" value={form.purchasedYear} onChange={handleChange('purchasedYear')}>
+              <MenuItem value="">None</MenuItem>
+              {YEARS.map((y) => <MenuItem key={y} value={y}>{y}</MenuItem>)}
+            </Select>
+          </FormControl>
 
           <FormControl fullWidth size="small">
             <InputLabel>Branch</InputLabel>
