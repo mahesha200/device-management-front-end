@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Paper, TextField, Button, Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import notificationService from '../../utils/notificationService';
+import Preloader from '../common/Preloader';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -77,6 +78,10 @@ export default function ModifyAsset() {
         console.error('Error fetching asset:', err);
         setError(err.message);
         setAsset(null);
+        // Show error notification
+        await notificationService.notifyError(
+          `Failed to load asset: ${err.message}`
+        );
       } finally {
         setLoading(false);
       }
@@ -95,24 +100,31 @@ export default function ModifyAsset() {
     if (!asset) return;
 
     const requiredFields = [
-      'category',
-      'brand',
-      'model',
-      'serialNumber',
-      'division',
-      'branch',
-      'empName',
+      { field: 'category', label: 'Category' },
+      { field: 'brand', label: 'Brand' },
+      { field: 'model', label: 'Model' },
+      { field: 'serialNumber', label: 'Serial Number' },
+      { field: 'division', label: 'Division' },
+      { field: 'branch', label: 'Branch' },
+      { field: 'empName', label: 'Employee Name' },
     ];
 
-    const missing = requiredFields.filter((f) => !asset[f]);
+    const missing = requiredFields.filter((f) => !asset[f.field]);
     if (missing.length) {
+      const missingLabels = missing.map(f => f.label).join(', ');
       await notificationService.notifyError(
-        `Please fill required fields: ${missing.join(', ')}`
+        `Please fill required fields: ${missingLabels}`
       );
       return;
     }
 
     try {
+      // Show loading notification
+      await notificationService.notifyCustom('Updating Asset', 'Please wait...', {
+        severity: 'info',
+        duration: 2000
+      });
+
       // Map frontend field names to backend field names
       const backendPayload = {
         assetNo: asset.assetNo,
@@ -161,28 +173,27 @@ export default function ModifyAsset() {
 
       const data = await response.json();
       
-      // Show system notification
+      // Show success notification with detailed info
       await notificationService.notifyDeviceModified({
         assetNo: asset.assetNo,
-        name: asset.name,
+        name: asset.name || 'Asset',
         category: asset.category,
         brand: asset.brand
       });
       
-      navigate('/assets');
+      // Navigate after a brief delay to ensure notification is seen
+      setTimeout(() => navigate('/assets'), 500);
     } catch (err) {
       console.error('Error updating asset:', err);
-      // Show system notification for error
+      // Show detailed error notification
       await notificationService.notifyError(
-        err.message || 'Failed to update asset. Please try again.'
+        err.message || 'Failed to update asset. Please check your input and try again.'
       );
     }
   };
 
   if (loading) return (
-    <Box sx={{ p: 3 }}>
-      <Typography>Loading...</Typography>
-    </Box>
+    <Preloader message="Loading asset details..." />
   );
 
   if (error || !asset) return (

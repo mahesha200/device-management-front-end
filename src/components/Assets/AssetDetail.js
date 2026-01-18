@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { Box, Paper, Typography, Button, Grid, Divider, Chip } from '@mui/material';
+import notificationService from '../../utils/notificationService';
+import Preloader from '../common/Preloader';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -33,6 +35,10 @@ export default function AssetDetail() {
         console.error('Error fetching asset:', err);
         setError(err.message);
         setAsset(null);
+        // Show error notification
+        await notificationService.notifyError(
+          `Failed to load asset details: ${err.message}`
+        );
       } finally {
         setLoading(false);
       }
@@ -45,9 +51,7 @@ export default function AssetDetail() {
 
   if (loading) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Typography>Loading...</Typography>
-      </Box>
+      <Preloader message="Loading asset details..." />
     );
   }
 

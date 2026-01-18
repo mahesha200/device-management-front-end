@@ -134,11 +134,7 @@ class NotificationService {
       severity: 'success',
       icon: '/favicons/android-chrome-192x192.png',
       tag: 'device-added',
-      data: deviceData,
-      actions: [
-        { action: 'view', title: 'View Device' },
-        { action: 'close', title: 'Dismiss' }
-      ]
+      data: deviceData
     });
   }
 
@@ -154,11 +150,7 @@ class NotificationService {
       severity: 'success',
       icon: '/favicons/android-chrome-192x192.png',
       tag: 'device-modified',
-      data: deviceData,
-      actions: [
-        { action: 'view', title: 'View Device' },
-        { action: 'close', title: 'Dismiss' }
-      ]
+      data: deviceData
     });
   }
 
@@ -185,6 +177,61 @@ class NotificationService {
     return this.show(title, {
       body: message,
       ...options
+    });
+  }
+
+  /**
+   * Show warning notification
+   */
+  async notifyWarning(message, title = 'Warning') {
+    return this.show(title, {
+      body: message,
+      severity: 'warning',
+      icon: '/favicons/android-chrome-192x192.png',
+      tag: 'warning',
+      duration: 6000
+    });
+  }
+
+  /**
+   * Show info notification
+   */
+  async notifyInfo(message, title = 'Information') {
+    return this.show(title, {
+      body: message,
+      severity: 'info',
+      icon: '/favicons/android-chrome-192x192.png',
+      tag: 'info',
+      duration: 4000
+    });
+  }
+
+  /**
+   * Show success notification
+   */
+  async notifySuccess(message, title = 'Success') {
+    return this.show(title, {
+      body: message,
+      severity: 'success',
+      icon: '/favicons/android-chrome-192x192.png',
+      tag: 'success',
+      duration: 4000
+    });
+  }
+
+  /**
+   * Show notification for device deleted
+   */
+  async notifyDeviceDeleted(deviceData) {
+    const title = 'Device Deleted';
+    const body = `${deviceData.name || deviceData.assetNo} has been removed from the system`;
+    
+    return this.show(title, {
+      body,
+      severity: 'info',
+      icon: '/favicons/android-chrome-192x192.png',
+      tag: 'device-deleted',
+      data: deviceData
     });
   }
 }

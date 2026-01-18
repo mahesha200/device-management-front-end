@@ -69,6 +69,27 @@ export default function AddAsset() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate required fields
+    if (!form.serialNumber) {
+      await notificationService.notifyError('Serial Number is required');
+      return;
+    }
+
+    if (!form.empName) {
+      await notificationService.notifyError('Employee Name is required');
+      return;
+    }
+
+    if (!form.category || !form.brand || !form.model) {
+      await notificationService.notifyError('Category, Brand, and Model are required fields');
+      return;
+    }
+
+    if (!form.division || !form.section) {
+      await notificationService.notifyError('Division and Section are required fields');
+      return;
+    }
+
     const newAsset = {
       assetNo: form.assetNo,
       pcName: form.name,
@@ -103,6 +124,12 @@ export default function AddAsset() {
     };
 
     try {
+      // Show loading notification
+      await notificationService.notifyCustom('Creating Asset', 'Please wait...', {
+        severity: 'info',
+        duration: 2000
+      });
+
       const response = await fetch(`${API_BASE_URL}/assets`, {
         method: 'POST',
         headers: {
@@ -118,20 +145,22 @@ export default function AddAsset() {
       }
 
       if (data.success) {
-        // Show system notification
+        // Show success notification with detailed info
         await notificationService.notifyDeviceAdded({
           assetNo: newAsset.assetNo,
-          name: newAsset.pcName,
+          name: newAsset.pcName || 'New Asset',
           category: newAsset.assetCategory,
           brand: newAsset.assetBrand
         });
-        navigate('/assets');
+        
+        // Navigate after a brief delay to ensure notification is seen
+        setTimeout(() => navigate('/assets'), 500);
       } else {
         throw new Error(data.message || 'Failed to create asset');
       }
     } catch (err) {
       console.error('Error creating asset:', err);
-      // Show system notification for error
+      // Show detailed error notification
       await notificationService.notifyError(
         err.message || 'Failed to create asset. Please check your input and try again.'
       );
