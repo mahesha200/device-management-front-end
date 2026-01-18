@@ -72,6 +72,24 @@ export default function AssetDetail() {
     );
   }
 
+  // Convert status code to display text and color
+  const getStatusDisplay = (statusCode) => {
+    switch(statusCode) {
+      case 'A':
+        return { text: 'Active', color: 'success' };
+      case 'I':
+        return { text: 'Inactive', color: 'error' };
+      case 'T':
+        return { text: 'Transferred', color: 'warning' };
+      case 'R':
+        return { text: 'Retired', color: 'default' };
+      default:
+        return { text: statusCode || 'Unknown', color: 'default' };
+    }
+  };
+
+  const statusDisplay = getStatusDisplay(asset.status);
+
   const DetailRow = ({ label, value }) => (
     <Box sx={{ py: 1.5 }}>
       <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: 600 }}>
@@ -89,16 +107,16 @@ export default function AssetDetail() {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Box>
             <Typography variant="h4" sx={{ fontWeight: 600, color: 'primary.main' }}>
-              {asset.name}
+              {asset.pcName}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Asset No: {asset.assetNo}
+              Serial No: {asset.assetSerialNo}
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             <Chip 
-              label={asset.status || 'Unknown'} 
-              color={asset.status === 'Active' ? 'success' : asset.status === 'In Repair' ? 'warning' : 'default'}
+              label={statusDisplay.text} 
+              color={statusDisplay.color}
               sx={{ fontWeight: 600 }}
             />
             <Button 
@@ -124,12 +142,13 @@ export default function AssetDetail() {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
               Basic Information
             </Typography>
-            <DetailRow label="PC / Asset Name" value={asset.name} />
-            <DetailRow label="Category" value={asset.category} />
-            <DetailRow label="Brand" value={asset.brand} />
-            <DetailRow label="Model" value={asset.model} />
-            <DetailRow label="Serial Number" value={asset.serialNumber} />
-            <DetailRow label="IP Address" value={asset.ip} />
+            <DetailRow label="Asset Number" value={asset.assetNo} />
+            <DetailRow label="PC / Asset Name" value={asset.pcName} />
+            <DetailRow label="Category" value={asset.assetCategory} />
+            <DetailRow label="Brand" value={asset.assetBrand} />
+            <DetailRow label="Model" value={asset.assetModel} />
+            <DetailRow label="Serial Number" value={asset.assetSerialNo} />
+            <DetailRow label="IP Address" value={asset.assetIp} />
             <DetailRow label="Added Date" value={asset.addedDate ? new Date(asset.addedDate).toLocaleDateString() : '—'} />
           </Grid>
 
@@ -179,7 +198,17 @@ export default function AssetDetail() {
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
               Status & Remarks
             </Typography>
-            <DetailRow label="Status" value={asset.status} />
+            <Box sx={{ py: 1.5 }}>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, textTransform: 'uppercase', fontSize: '0.7rem', fontWeight: 600 }}>
+                Status
+              </Typography>
+              <Chip 
+                label={statusDisplay.text} 
+                color={statusDisplay.color}
+                size="small"
+                sx={{ fontWeight: 600 }}
+              />
+            </Box>
             <DetailRow label="Date of Status" value={asset.dateOfStatus ? new Date(asset.dateOfStatus).toLocaleDateString() : '—'} />
             <DetailRow label="Remarks" value={asset.remarks} />
           </Grid>

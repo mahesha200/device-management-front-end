@@ -11,18 +11,19 @@ import {
   Typography,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import notificationService from '../../utils/notificationService';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
 /* ---------------- Dropdown Data ---------------- */
-const CATEGORIES = ['Printer', 'Router', 'PC', 'Camera', 'Switch', 'Server', 'Firewall', 'Access Point'];
-const BRANDS = ['Dell', 'HP', 'Lenovo', 'Asus', 'Cisco'];
+const CATEGORIES = ['AIO', 'CMP', 'LTP', 'MINI', 'MON', 'PRT', 'SCN', 'TV'];
+const BRANDS = ['ACER', 'ASUS', 'AUI', 'AVISION', 'BROTHER', 'CANON', 'DELL', 'EPSON', 'EW195', 'EWIS', 'HP', 'KODAK', 'LENOVO', 'LEXMARK', 'PRINTRONIX', 'SAMSUNG', 'TALLY GENICOM'];
+const DIVISIONS = ['ACC', 'ACT', 'ADM', 'Adm.', 'AUD', 'AUT', 'BO', 'BRACT', 'COR', 'CSD', 'CSC', 'CSM', 'CVL', 'DCS', 'DGM', 'EK', 'ENG', 'Eng.', 'FIN', 'GL-DGM', 'GLE-CSC', 'HKD-CSC', 'HR', 'KEL', 'KL', 'MOR', 'NG', 'OPE', 'OPR', 'PRJ', 'SD', 'STR', 'WK'];
 const DESIGNATIONS = ['Engineer', 'Manager', 'Technician', 'Clerk'];
-const DIVISIONS = ['IT', 'HR', 'Finance', 'Operations'];
-const SECTIONS = ['PLRD','PRJ','CSD','SUP','IT','TES','CON','ADM','STR'];
+const SECTIONS = ['ACC', 'ACT', 'ADM', 'AMB-CSC', 'AUD', 'BO', 'BRACT', 'CON', 'COR', 'CSC', 'CSD', 'DCS', 'DDD', 'DGM', 'ENG', 'EXAUD', 'FIN', 'GLE-CSC', 'HKD-CSC', 'HIK-CSC', 'IAUD', 'INT', 'IT', 'IT ROOM', 'KELBR', 'KELDL', 'LEG', 'MGT', 'MOR', 'NUBR', 'OPE', 'OPR', 'PHM', 'PLD', 'PLRD', 'PRJ', 'SDC', 'SOD', 'SOM', 'STR', 'SUP', 'TES', 'TEST', 'TRE'];
 const VENDORS = ['EWIS', 'METRO', 'DEBUG','VSIS',''];
-const BRANCHES = ['Head Office', 'Nugegoda', 'Galle', 'Kotte', 'Moratuwa', 'Kelaniya'];
-const FLOORS = [ '1st', '2nd', '3rd','4th'];
+const BRANCHES = ['Head Office', 'Nugegoda', 'Galle', 'Kotte', 'Moratuwa', 'Kelaniya', 'Kaluthara', 'Negambo'];
+const FLOORS = ['1st Floor', '2nd Floor', '3rd Floor', '4th Floor'];
 const STATUS_OPTIONS = ['Active', 'In Repair', 'Transferred', 'Retired'];
 const YEARS = Array.from({ length: 27 }, (_, i) => 2026 - i); // 2026 down to 2000
 
@@ -117,14 +118,23 @@ export default function AddAsset() {
       }
 
       if (data.success) {
-        alert('Asset created successfully!');
+        // Show system notification
+        await notificationService.notifyDeviceAdded({
+          assetNo: newAsset.assetNo,
+          name: newAsset.pcName,
+          category: newAsset.assetCategory,
+          brand: newAsset.assetBrand
+        });
         navigate('/assets');
       } else {
         throw new Error(data.message || 'Failed to create asset');
       }
     } catch (err) {
       console.error('Error creating asset:', err);
-      alert(`Failed to create asset: ${err.message}`);
+      // Show system notification for error
+      await notificationService.notifyError(
+        err.message || 'Failed to create asset. Please check your input and try again.'
+      );
     }
   };
 
@@ -139,22 +149,16 @@ export default function AddAsset() {
           onSubmit={handleSubmit}
           style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr' }}
         >
-          <TextField label="Asset Number" required value={form.assetNo} onChange={handleChange('assetNo')} />
-          <TextField label="PC Name" required value={form.name} onChange={handleChange('name')} />
+          <TextField label="Asset Number" value={form.assetNo} onChange={handleChange('assetNo')} />
+          <TextField label="PC Name" value={form.name} onChange={handleChange('name')} />
           
           <TextField label="Date Added" type="date" InputLabelProps={{ shrink: true }} value={form.addedDate} onChange={handleChange('addedDate')} />
           <TextField label="Transfer Date" type="date" InputLabelProps={{ shrink: true }} value={form.transferDate} onChange={handleChange('transferDate')} />
           
-          <TextField label="Employee Number" required value={form.empNumber} onChange={handleChange('empNumber')} />
+          <TextField label="Employee Number" value={form.empNumber} onChange={handleChange('empNumber')} />
           <TextField label="Employee Name" required value={form.empName} onChange={handleChange('empName')} />
 
-          <FormControl fullWidth size="small">
-            <InputLabel>Designation</InputLabel>
-            <Select label="Designation" value={form.designation} onChange={handleChange('designation')}>
-              <MenuItem value="">None</MenuItem>
-              {DESIGNATIONS.map((d) => <MenuItem key={d} value={d}>{d}</MenuItem>)}
-            </Select>
-          </FormControl>
+          <TextField label="Designation" value={form.designation} onChange={handleChange('designation')} />
 
           <FormControl fullWidth size="small" required>
             <InputLabel>Division</InputLabel>
@@ -164,7 +168,7 @@ export default function AddAsset() {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small" required>
             <InputLabel>Section</InputLabel>
             <Select label="Section" value={form.section} onChange={handleChange('section')}>
               <MenuItem value="">None</MenuItem>
@@ -190,20 +194,14 @@ export default function AddAsset() {
 
           <TextField label="Model" required value={form.model} onChange={handleChange('model')} />
           <TextField label="Serial Number" required value={form.serialNumber} onChange={handleChange('serialNumber')} />
-          <TextField label="IP Address" required value={form.ip} onChange={handleChange('ip')} />
+          <TextField label="IP Address" value={form.ip} onChange={handleChange('ip')} />
 
           <TextField label="Processor" value={form.processor} onChange={handleChange('processor')} />
           <TextField label="RAM (GB)" type="number" inputProps={{ min: 0 }} value={form.ram} onChange={handleChange('ram')} />
           <TextField label="Hard Disk (GB)" type="number" inputProps={{ min: 0 }} value={form.harddisk} onChange={handleChange('harddisk')} />
           <TextField label="SSD (GB)" type="number" inputProps={{ min: 0 }} value={form.ssd} onChange={handleChange('ssd')} />
 
-          <FormControl fullWidth size="small">
-            <InputLabel>Vendor</InputLabel>
-            <Select label="Vendor" value={form.vendor} onChange={handleChange('vendor')}>
-              <MenuItem value="">None</MenuItem>
-              {VENDORS.map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
-            </Select>
-          </FormControl>
+          <TextField label="Vendor" value={form.vendor} onChange={handleChange('vendor')} />
 
           <FormControl fullWidth size="small">
             <InputLabel>Purchased Year</InputLabel>

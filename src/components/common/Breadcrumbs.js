@@ -35,7 +35,7 @@ const Breadcrumbs = ({ customBreadcrumbs }) => {
       if (segment === 'add') {
         label = 'Add New';
       } else if (segment === 'edit') {
-        label = 'Edit';
+        label = 'Modify';
       } else if (!isNaN(segment)) {
         label = `Details`;
       }

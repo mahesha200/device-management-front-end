@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   Paper,
   Table,
@@ -31,23 +31,67 @@ export default function AssetsList() {
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
 
-  /* URL department filter (ONLY from URL) */
+  /* URL section filter (ONLY from URL) */
   const [searchParams] = useSearchParams();
-  const departmentFromUrl = searchParams.get('department') || '';
+  const sectionFromUrl = searchParams.get('section') || '';
 
   /* Local dropdown filters */
   const [filters, setFilters] = useState({
-    division: '',
+    section: '',
     category: '',
     brand: '',
     floor: '',
   });
 
+  /* Filter options from backend */
+  const [filterOptions, setFilterOptions] = useState({
+    sections: [],
+    categories: [],
+    brands: [],
+    floors: []
+  });
+
+  /* Fetch filter options from backend */
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/assets/filters/options');
+        const result = await response.json();
+        
+        if (result.success) {
+          setFilterOptions({
+            sections: result.data.sections || [],
+            categories: result.data.categories || [],
+            brands: result.data.brands || [],
+            floors: result.data.floors || []
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching filter options:', error);
+      }
+    };
+
+    fetchFilterOptions();
+  }, []);
+
   const fetchAssets = useCallback(async () => {
     setLoading(true);
     try {
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page + 1,
+        limit: rowsPerPage
+      });
+
+      // Add filters to query params
+      const activeSection = sectionFromUrl || filters.section;
+      if (activeSection) params.append('section', activeSection);
+      if (filters.category) params.append('category', filters.category);
+      if (filters.brand) params.append('brand', filters.brand);
+      if (filters.floor) params.append('floor', filters.floor);
+
       const response = await fetch(
-        `http://localhost:5000/api/assets?page=${page + 1}&limit=${rowsPerPage}`
+        `http://localhost:5000/api/assets?${params.toString()}`
       );
       const result = await response.json();
       
@@ -62,56 +106,12 @@ export default function AssetsList() {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, filters, sectionFromUrl]);
 
   /* Load data from API */
   useEffect(() => {
     fetchAssets();
   }, [fetchAssets]);
-
-  /* -------------------- Derived Dropdown Values -------------------- */
-  const divisions = useMemo(
-    () => {
-      const predefinedDivisions = ['ADM', 'CSC', 'KL', 'FIN', 'ACT', 'ENG', 'IT'];
-      const assetDivisions = [...new Set(assets.map(a => a.division).filter(Boolean))];
-      // Combine predefined and asset divisions, remove duplicates
-      return [...new Set([...predefinedDivisions, ...assetDivisions])];
-    },
-    [assets]
-  );
-
-  const categories = useMemo(
-    () => {
-      const predefinedCategories = ['CMP', 'MON', 'SCN', 'PRT'];
-      const assetCategories = [...new Set(assets.map(a => a.assetCategory).filter(Boolean))];
-      // Combine predefined and asset categories, remove duplicates
-      return [...new Set([...predefinedCategories, ...assetCategories])];
-    },
-    [assets]
-  );
-
-  const brands = useMemo(
-    () => {
-      const predefinedBrands = ['EWIS', 'EPSON', 'HP', 'BROTHER', 'CANON'];
-      const assetBrands = [...new Set(assets.map(a => a.assetBrand).filter(Boolean))];
-      // Combine predefined and asset brands, remove duplicates
-      return [...new Set([...predefinedBrands, ...assetBrands])];
-    },
-    [assets]
-  );
-
-  const FLOORS = ['1st Floor', '2nd Floor', '3rd Floor', '4th Floor'];
-
-  /* -------------------- Filtering -------------------- */
-  const filtered = useMemo(() => {
-    return assets.filter(a =>
-      (!departmentFromUrl || a.department === departmentFromUrl) &&
-      (!filters.division || a.division === filters.division) &&
-      (!filters.category || a.assetCategory === filters.category) &&
-      (!filters.brand || a.assetBrand === filters.brand) &&
-      (!filters.floor || a.floor === filters.floor)
-    );
-  }, [assets, filters, departmentFromUrl]);
 
   /* -------------------- Inline Editing -------------------- */
   const startEditCell = (id, field, value) => {
@@ -126,7 +126,7 @@ export default function AssetsList() {
     if (value === undefined) return;
 
     const updated = assets.map(a =>
-      a.assetNo === id ? { ...a, [field]: value } : a
+      a.assetSerialNo === id ? { ...a, [field]: value } : a
     );
 
     setAssets(updated);
@@ -150,13 +150,16 @@ export default function AssetsList() {
       {/* Filters */}
       <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 2 }}>
         <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel>Division</InputLabel>
+          <InputLabel>Section</InputLabel>
           <Select
-            value={filters.division}
-            label="Division"
-            onChange={e => setFilters(f => ({ ...f, division: e.target.value }))}
+            value={filters.section}
+            label="Section"
+            onChange={e => {
+              setFilters(f => ({ ...f, section: e.target.value }));
+              setPage(0);
+            }}
           >
-            {divisions.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+            {filterOptions.sections.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
           </Select>
         </FormControl>
 
@@ -165,9 +168,12 @@ export default function AssetsList() {
           <Select
             value={filters.category}
             label="Category"
-            onChange={e => setFilters(f => ({ ...f, category: e.target.value }))}
+            onChange={e => {
+              setFilters(f => ({ ...f, category: e.target.value }));
+              setPage(0);
+            }}
           >
-            {categories.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+            {filterOptions.categories.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
           </Select>
         </FormControl>
 
@@ -176,9 +182,12 @@ export default function AssetsList() {
           <Select
             value={filters.brand}
             label="Brand"
-            onChange={e => setFilters(f => ({ ...f, brand: e.target.value }))}
+            onChange={e => {
+              setFilters(f => ({ ...f, brand: e.target.value }));
+              setPage(0);
+            }}
           >
-            {brands.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+            {filterOptions.brands.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
           </Select>
         </FormControl>
 
@@ -187,9 +196,12 @@ export default function AssetsList() {
           <Select
             value={filters.floor}
             label="Floor"
-            onChange={e => setFilters(f => ({ ...f, floor: e.target.value }))}
+            onChange={e => {
+              setFilters(f => ({ ...f, floor: e.target.value }));
+              setPage(0);
+            }}
           >
-            {FLOORS.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
+            {filterOptions.floors.map(f => <MenuItem key={f} value={f}>{f}</MenuItem>)}
           </Select>
         </FormControl>
 
@@ -197,7 +209,7 @@ export default function AssetsList() {
           size="small"
           variant="outlined"
           onClick={() => {
-            setFilters({ division: '', category: '', brand: '', floor: '' });
+            setFilters({ section: '', category: '', brand: '', floor: '' });
             setPage(0);
           }}
           sx={{ minWidth: 120 }}
@@ -211,13 +223,12 @@ export default function AssetsList() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Asset No</TableCell>
-              <TableCell sx={{ pl: 4 }}>Name</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Brand</TableCell>
-              <TableCell>Serial</TableCell>
-              <TableCell sx={{ pl: 4 }}>IP Address</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell>Employee Number</TableCell>
+              <TableCell>Asset Brand</TableCell>
+              <TableCell>Asset Category</TableCell>
+              <TableCell>Division</TableCell>
+              <TableCell>Section</TableCell>
+              <TableCell>Asset Serial Number</TableCell>
               <TableCell sx={{ pl: 8 }}>Actions</TableCell>
             </TableRow>
           </TableHead>
@@ -225,48 +236,28 @@ export default function AssetsList() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">Loading...</TableCell>
+                <TableCell colSpan={7} align="center">Loading...</TableCell>
               </TableRow>
-            ) : filtered.length === 0 ? (
+            ) : assets.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} align="center">No assets found</TableCell>
+                <TableCell colSpan={7} align="center">No assets found</TableCell>
               </TableRow>
             ) : (
-              filtered.map((a, index) => (
-                <TableRow key={a.assetNo || `asset-${index}`} hover>
-                  <TableCell>{displayValue(a.assetNo)}</TableCell>
-                  <TableCell>{displayValue(a.pcName)}</TableCell>
-                  <TableCell>{displayValue(a.assetCategory)}</TableCell>
+              assets.map((a, index) => (
+                <TableRow key={a.assetSerialNo || `asset-${index}`} hover>
+                  <TableCell>{displayValue(a.empNo)}</TableCell>
                   <TableCell>{displayValue(a.assetBrand)}</TableCell>
-
-                  <TableCell
-                    onClick={() => startEditCell(a.assetNo, 'assetSerialNo', a.assetSerialNo)}
-                  >
-                    {editingCells[a.assetNo]?.assetSerialNo !== undefined ? (
-                      <TextField
-                        size="small"
-                        autoFocus
-                        value={editingCells[a.assetNo].assetSerialNo}
-                        onChange={e =>
-                          setEditingCells(p => ({
-                            ...p,
-                            [a.assetNo]: { assetSerialNo: e.target.value },
-                          }))
-                        }
-                        onBlur={() => saveCell(a.assetNo, 'assetSerialNo')}
-                      />
-                    ) : displayValue(a.assetSerialNo)}
-                  </TableCell>
-
-                  <TableCell>{displayValue(a.assetIp)}</TableCell>
-                  <TableCell>{displayValue(a.status)}</TableCell>
+                  <TableCell>{displayValue(a.assetCategory)}</TableCell>
+                  <TableCell>{displayValue(a.division)}</TableCell>
+                  <TableCell>{displayValue(a.section)}</TableCell>
+                  <TableCell>{displayValue(a.assetSerialNo)}</TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', gap: 2 }}>
                       <Button
                         size="small"
                         variant="outlined"
                         component={RouterLink}
-                        to={`/assets/${a.assetNo}`}
+                        to={`/assets/${a.assetSerialNo}`}
                       >
                         Review
                       </Button>
@@ -274,7 +265,7 @@ export default function AssetsList() {
                         size="small"
                         variant="outlined"
                         component={RouterLink}
-                        to={`/assets/${a.assetNo}/edit`}
+                        to={`/assets/${a.assetSerialNo}/edit`}
                       >
                         Modify
                       </Button>

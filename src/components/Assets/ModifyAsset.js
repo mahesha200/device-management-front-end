@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Paper, TextField, Button, Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
+import notificationService from '../../utils/notificationService';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
@@ -11,14 +12,14 @@ export default function ModifyAsset() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const SAMPLE_CATEGORIES = ['Printer', 'Router', 'PC', 'Camera', 'Switch', 'Server', 'Firewall', 'Access Point'];
-  const SAMPLE_BRANDS = ['Dell', 'HP', 'Lenovo', 'Asus', 'Cisco'];
+  const SAMPLE_CATEGORIES = ['AIO', 'CMP', 'LTP', 'MINI', 'MON', 'PRT', 'SCN', 'TV'];
+  const SAMPLE_BRANDS = ['ACER', 'ASUS', 'AUI', 'AVISION', 'BROTHER', 'CANON', 'DELL', 'EPSON', 'EW195', 'EWIS', 'HP', 'KODAK', 'LENOVO', 'LEXMARK', 'PRINTRONIX', 'SAMSUNG', 'TALLY GENICOM'];
+  const DIVISIONS = ['ACC', 'ACT', 'ADM', 'Adm.', 'AUD', 'AUT', 'BO', 'BRACT', 'COR', 'CSD', 'CSC', 'CSM', 'CVL', 'DCS', 'DGM', 'EK', 'ENG', 'Eng.', 'FIN', 'GL-DGM', 'GLE-CSC', 'HKD-CSC', 'HR', 'KEL', 'KL', 'MOR', 'NG', 'OPE', 'OPR', 'PRJ', 'SD', 'STR', 'WK'];
   const DESIGNATIONS = ['Engineer', 'Manager', 'Technician', 'Clerk'];
-  const DIVISIONS = ['IT', 'HR', 'Finance', 'Operations'];
-  const SECTIONS = ['Section A', 'Section B', 'Section C'];
-  const VENDORS = ['Vendor A', 'Vendor B', 'Vendor C'];
-  const BRANCHES = ['Head Office', 'Nugegoda','Galle', 'Kotte', 'Moratuwa', 'Kelaniya' ];
-  const FLOORS = ['Ground', '1st', '2nd', '3rd'];
+  const SECTIONS = ['ACC', 'ACT', 'ADM', 'AMB-CSC', 'AUD', 'BO', 'BRACT', 'CON', 'COR', 'CSC', 'CSD', 'DCS', 'DDD', 'DGM', 'ENG', 'EXAUD', 'FIN', 'GLE-CSC', 'HKD-CSC', 'HIK-CSC', 'IAUD', 'INT', 'IT', 'IT ROOM', 'KELBR', 'KELDL', 'LEG', 'MGT', 'MOR', 'NUBR', 'OPE', 'OPR', 'PHM', 'PLD', 'PLRD', 'PRJ', 'SDC', 'SOD', 'SOM', 'STR', 'SUP', 'TES', 'TEST', 'TRE'];
+  const VENDORS = ['DEBUG'];
+  const BRANCHES = ['Head Office', 'Nugegoda','Galle', 'Kotte', 'Moratuwa', 'Kelaniya', 'Kaluthara', 'Negambo'];
+  const FLOORS = ['1st Floor', '2nd Floor', '3rd Floor', '4th Floor'];
   const STATUS_OPTIONS = ['Active', 'In Repair', 'Transferred', 'Retired'];
 
   useEffect(() => {
@@ -94,22 +95,20 @@ export default function ModifyAsset() {
     if (!asset) return;
 
     const requiredFields = [
-      'assetNo',
-      'name',
       'category',
       'brand',
       'model',
       'serialNumber',
       'division',
       'branch',
-      'ip',
       'empName',
-      'empNo',
     ];
 
     const missing = requiredFields.filter((f) => !asset[f]);
     if (missing.length) {
-      alert(`Please fill required fields: ${missing.join(', ')}`);
+      await notificationService.notifyError(
+        `Please fill required fields: ${missing.join(', ')}`
+      );
       return;
     }
 
@@ -161,11 +160,22 @@ export default function ModifyAsset() {
       }
 
       const data = await response.json();
-      alert('Asset updated successfully!');
+      
+      // Show system notification
+      await notificationService.notifyDeviceModified({
+        assetNo: asset.assetNo,
+        name: asset.name,
+        category: asset.category,
+        brand: asset.brand
+      });
+      
       navigate('/assets');
     } catch (err) {
       console.error('Error updating asset:', err);
-      alert(`Failed to update asset: ${err.message}`);
+      // Show system notification for error
+      await notificationService.notifyError(
+        err.message || 'Failed to update asset. Please try again.'
+      );
     }
   };
 
@@ -187,20 +197,14 @@ export default function ModifyAsset() {
       <Paper sx={{ p: 3, maxWidth: 900 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>Modify Asset</Typography>
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-          <TextField required label="Asset Number" value={asset.assetNo || ''} onChange={handleChange('assetNo')} />
-          <TextField required label="PC Name" value={asset.name || ''} onChange={handleChange('name')} />
+          <TextField label="Asset Number" value={asset.assetNo || ''} onChange={handleChange('assetNo')} />
+          <TextField label="PC Name" value={asset.name || ''} onChange={handleChange('name')} />
           <TextField label="Date Added" type="date" InputLabelProps={{ shrink: true }} value={asset.addedDate || ''} onChange={handleChange('addedDate')} />
           <TextField label="Transfer Date" type="date" InputLabelProps={{ shrink: true }} value={asset.transferDate || ''} onChange={handleChange('transferDate')} />
-          <TextField required label="Employee Number" value={asset.empNo || ''} onChange={handleChange('empNo')} />
+          <TextField label="Employee Number" value={asset.empNo || ''} onChange={handleChange('empNo')} />
           <TextField required label="Employee Name" value={asset.empName || ''} onChange={handleChange('empName')} />
 
-          <FormControl fullWidth size="small">
-            <InputLabel id="designation-label">Designation</InputLabel>
-            <Select labelId="designation-label" label="Designation" value={asset.designation || ''} onChange={handleChange('designation')}>
-              <MenuItem value="">None</MenuItem>
-              {DESIGNATIONS.map((d) => <MenuItem key={d} value={d}>{d}</MenuItem>)}
-            </Select>
-          </FormControl>
+          <TextField label="Designation" value={asset.designation || ''} onChange={handleChange('designation')} />
 
           <FormControl fullWidth size="small" required>
             <InputLabel id="division-label">Division</InputLabel>
@@ -210,7 +214,7 @@ export default function ModifyAsset() {
             </Select>
           </FormControl>
 
-          <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small" required>
             <InputLabel id="section-label">Section</InputLabel>
             <Select labelId="section-label" label="Section" value={asset.section || ''} onChange={handleChange('section')}>
               <MenuItem value="">None</MenuItem>
@@ -236,20 +240,14 @@ export default function ModifyAsset() {
 
           <TextField required label="Model" value={asset.model || ''} onChange={handleChange('model')} />
           <TextField required label="Serial Number" value={asset.serialNumber || ''} onChange={handleChange('serialNumber')} />
-          <TextField required label="IP Address" value={asset.ip || ''} onChange={handleChange('ip')} />
+          <TextField label="IP Address" value={asset.ip || ''} onChange={handleChange('ip')} />
 
           <TextField label="Processor" value={asset.processor || ''} onChange={handleChange('processor')} />
           <TextField label="RAM (GB)" type="number" value={asset.ram || ''} onChange={handleChange('ram')} />
           <TextField label="Hard Disk (GB)" type="number" value={asset.harddisk || ''} onChange={handleChange('harddisk')} />
           <TextField label="SSD (GB)" type="number" value={asset.ssd || ''} onChange={handleChange('ssd')} />
 
-          <FormControl fullWidth size="small">
-            <InputLabel id="vendor-label">Vendor</InputLabel>
-            <Select labelId="vendor-label" label="Vendor" value={asset.vendor || ''} onChange={handleChange('vendor')}>
-              <MenuItem value="">None</MenuItem>
-              {VENDORS.map((v) => <MenuItem key={v} value={v}>{v}</MenuItem>)}
-            </Select>
-          </FormControl>
+          <TextField label="Vendor" value={asset.vendor || ''} onChange={handleChange('vendor')} />
 
           <TextField label="Purchased Year" type="number" value={asset.purchasedYear || ''} onChange={handleChange('purchasedYear')} />
 

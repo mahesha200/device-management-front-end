@@ -3,14 +3,17 @@ import StatsCard from './components/Dashboard/StatsCard';
 import Header from './components/Layouts/Header';
 import Sidebar from './components/Layouts/Sidebar';
 import Breadcrumbs from './components/common/Breadcrumbs';
+import NotificationBar from './components/common/NotificationBar';
 import DevicesIcon from '@mui/icons-material/Devices';
 import { Grid, Container, Box, Toolbar } from '@mui/material';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import Login from './components/Auth/Login';
 import AssetsList from './components/Assets/AssetsList';
 import AssetDetail from './components/Assets/AssetDetail';
 import AddAsset from './components/Assets/AddAsset';
 import ModifyAsset from './components/Assets/ModifyAsset';
+import notificationService from './utils/notificationService';
 
 function Dashboard() {
   return (
@@ -20,40 +23,40 @@ function Dashboard() {
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="IT Equipment"
-            value={2}
+            value=""
             icon={<DevicesIcon fontSize="large" />}
             color="#dc2626"
-            to="/assets?department=IT"
+            to="/assets?section=IT"
           />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Server Equipment"
-            value={10}
+            value=""
             icon={<DevicesIcon fontSize="large" />}
             color="#2563eb"
-            to="/assets?department=Engineering"
+            to="/assets?section=ENG"
           />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Finance Equipment"
-            value={5}
+            value=""
             icon={<DevicesIcon fontSize="large" />}
             color="#16a34a"
-            to="/assets?department=Finance"
+            to="/assets?section=FIN"
           />
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Other"
-            value={7}
+            value=""
             icon={<DevicesIcon fontSize="large" />}
             color="#ca8a04"
-            to="/assets?department=Infrastructure"
+            to="/assets?section=ADM"
           />
         </Grid>
       </Grid>
@@ -80,18 +83,49 @@ function DashboardLayout({ children, breadcrumbs }) {
 }
 
 function App() {
+  const [notification, setNotification] = useState(null);
+
+  useEffect(() => {
+    // Subscribe to notification events
+    const unsubscribe = notificationService.subscribe((notif) => {
+      setNotification(notif);
+    });
+
+    // Request notification permission on app load
+    notificationService.requestPermission();
+
+    return unsubscribe;
+  }, []);
+
+  const handleCloseNotification = () => {
+    setNotification(null);
+  };
+
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route path="/assets" element={requireAuth() ? <DashboardLayout><AssetsList/></DashboardLayout> : <Navigate to="/login" replace />} />
-      <Route path="/assets/add" element={requireAuth() ? <DashboardLayout><AddAsset/></DashboardLayout> : <Navigate to="/login" replace />} />
-      <Route path="/assets/:id" element={requireAuth() ? <DashboardLayout><AssetDetail/></DashboardLayout> : <Navigate to="/login" replace />} />
-      <Route path="/assets/:id/edit" element={requireAuth() ? <DashboardLayout><ModifyAsset/></DashboardLayout> : <Navigate to="/login" replace />} />
-      <Route
-        path="/"
-        element={requireAuth() ? <DashboardLayout><Dashboard /></DashboardLayout> : <Navigate to="/login" replace />}
-      />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/assets" element={requireAuth() ? <DashboardLayout><AssetsList/></DashboardLayout> : <Navigate to="/login" replace />} />
+        <Route path="/assets/add" element={requireAuth() ? <DashboardLayout><AddAsset/></DashboardLayout> : <Navigate to="/login" replace />} />
+        <Route path="/assets/:id" element={requireAuth() ? <DashboardLayout><AssetDetail/></DashboardLayout> : <Navigate to="/login" replace />} />
+        <Route path="/assets/:id/edit" element={requireAuth() ? <DashboardLayout><ModifyAsset/></DashboardLayout> : <Navigate to="/login" replace />} />
+        <Route
+          path="/"
+          element={requireAuth() ? <DashboardLayout><Dashboard /></DashboardLayout> : <Navigate to="/login" replace />}
+        />
+      </Routes>
+      
+      {/* Global Notification Handler */}
+      {notification && (
+        <NotificationBar
+          open={!!notification}
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          title={notification.title}
+          message={notification.message}
+        />
+      )}
+    </>
   );
 }
 
