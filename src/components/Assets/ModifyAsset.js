@@ -12,6 +12,7 @@ export default function ModifyAsset() {
   const [asset, setAsset] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errors, setErrors] = useState({});
 
   const SAMPLE_CATEGORIES = ['AIO', 'CMP', 'LTP', 'MINI', 'MON', 'PRT', 'SCN', 'TV'];
   const SAMPLE_BRANDS = ['ACER', 'ASUS', 'AUI', 'AVISION', 'BROTHER', 'CANON', 'DELL', 'EPSON', 'EW195', 'EWIS', 'HP', 'KODAK', 'LENOVO', 'LEXMARK', 'PRINTRONIX', 'SAMSUNG', 'TALLY GENICOM'];
@@ -20,7 +21,7 @@ export default function ModifyAsset() {
   const SECTIONS = ['ACC', 'ACT', 'ADM', 'AMB-CSC', 'AUD', 'BO', 'BRACT', 'CON', 'COR', 'CSC', 'CSD', 'DCS', 'DDD', 'DGM', 'ENG', 'EXAUD', 'FIN', 'GLE-CSC', 'HKD-CSC', 'HIK-CSC', 'IAUD', 'INT', 'IT', 'IT ROOM', 'KELBR', 'KELDL', 'LEG', 'MGT', 'MOR', 'NUBR', 'OPE', 'OPR', 'PHM', 'PLD', 'PLRD', 'PRJ', 'SDC', 'SOD', 'SOM', 'STR', 'SUP', 'TES', 'TEST', 'TRE'];
   const VENDORS = ['DEBUG'];
   const BRANCHES = ['Head Office', 'Nugegoda','Galle', 'Kotte', 'Moratuwa', 'Kelaniya', 'Kaluthara', 'Negambo'];
-  const FLOORS = ['1st Floor', '2nd Floor', '3rd Floor', '4th Floor'];
+  const FLOORS = ['1ST FLOOR', '2ND FLOOR', '3RD FLOOR', '4TH FLOOR'];
   const STATUS_OPTIONS = ['Active', 'In Repair', 'Transferred', 'Retired'];
 
   useEffect(() => {
@@ -99,24 +100,34 @@ export default function ModifyAsset() {
   const handleModify = async () => {
     if (!asset) return;
 
-    const requiredFields = [
-      { field: 'category', label: 'Category' },
-      { field: 'brand', label: 'Brand' },
-      { field: 'model', label: 'Model' },
-      { field: 'serialNumber', label: 'Serial Number' },
-      { field: 'division', label: 'Division' },
-      { field: 'branch', label: 'Branch' },
-      { field: 'empName', label: 'Employee Name' },
-    ];
+    const newErrors = {};
 
-    const missing = requiredFields.filter((f) => !asset[f.field]);
-    if (missing.length) {
-      const missingLabels = missing.map(f => f.label).join(', ');
-      await notificationService.notifyError(
-        `Please fill required fields: ${missingLabels}`
-      );
+    if (!asset.category) newErrors.category = 'Category is required';
+    if (!asset.brand) newErrors.brand = 'Brand is required';
+    if (!asset.model) newErrors.model = 'Model is required';
+    if (!asset.serialNumber) newErrors.serialNumber = 'Serial Number is required';
+    if (!asset.division) newErrors.division = 'Division is required';
+    if (!asset.section) newErrors.section = 'Section is required';
+    if (!asset.branch) newErrors.branch = 'Branch is required';
+    if (!asset.empNo) newErrors.empNo = 'Employee Number is required';
+    if (!asset.empName) newErrors.empName = 'Employee Name is required';
+    if (!asset.transferDate) newErrors.transferDate = 'Transfer Date is required';
+    if (!asset.designation) newErrors.designation = 'Designation is required';
+    if (!asset.vendor) newErrors.vendor = 'Vendor is required';
+    if (!asset.purchasedYear) newErrors.purchasedYear = 'Purchased Year is required';
+    if (!asset.maintenanceWarranty) newErrors.maintenanceWarranty = 'Maintenance Warranty is required';
+
+    if (asset.maintenanceWarranty === 'Yes') {
+      if (!asset.maintenanceWarrantyStartDate) newErrors.maintenanceWarrantyStartDate = 'Warranty Start Date is required when Maintenance Warranty is Yes';
+      if (!asset.maintenanceWarrantyEndDate) newErrors.maintenanceWarrantyEndDate = 'Warranty End Date is required when Maintenance Warranty is Yes';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
 
     try {
       // Show loading notification
@@ -129,7 +140,6 @@ export default function ModifyAsset() {
       const backendPayload = {
         assetNo: asset.assetNo,
         pcName: asset.name,
-        addedDate: asset.addedDate || null,
         transferDate: asset.transferDate || null,
         empNo: asset.empNo,
         empName: asset.empName,
@@ -207,50 +217,97 @@ export default function ModifyAsset() {
     <Box sx={{ p: 3 }}>
       <Paper sx={{ p: 3, maxWidth: 900 }}>
         <Typography variant="h6" sx={{ mb: 2 }}>Modify Asset</Typography>
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
+        <Box component="form" noValidate sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
           <TextField label="Asset Number" value={asset.assetNo || ''} onChange={handleChange('assetNo')} />
           <TextField label="PC Name" value={asset.name || ''} onChange={handleChange('name')} />
-          <TextField label="Date Added" type="date" InputLabelProps={{ shrink: true }} value={asset.addedDate || ''} onChange={handleChange('addedDate')} />
-          <TextField label="Transfer Date" type="date" InputLabelProps={{ shrink: true }} value={asset.transferDate || ''} onChange={handleChange('transferDate')} />
-          <TextField label="Employee Number" value={asset.empNo || ''} onChange={handleChange('empNo')} />
-          <TextField required label="Employee Name" value={asset.empName || ''} onChange={handleChange('empName')} />
+          <TextField 
+            label="Transfer Date" 
+            type="date" 
+            InputLabelProps={{ shrink: true }} 
+            value={asset.transferDate || ''} 
+            onChange={handleChange('transferDate')} 
+            required 
+            error={!!errors.transferDate}
+            helperText={errors.transferDate}
+          />
+          <TextField 
+            label="Employee Number" 
+            value={asset.empNo || ''} 
+            onChange={handleChange('empNo')} 
+            required 
+            error={!!errors.empNo}
+            helperText={errors.empNo}
+          />
+          <TextField 
+            required 
+            label="Employee Name" 
+            value={asset.empName || ''} 
+            onChange={handleChange('empName')} 
+            error={!!errors.empName}
+            helperText={errors.empName}
+          />
 
-          <TextField label="Designation" value={asset.designation || ''} onChange={handleChange('designation')} />
+          <TextField 
+            label="Designation" 
+            value={asset.designation || ''} 
+            onChange={handleChange('designation')} 
+            required 
+            error={!!errors.designation}
+            helperText={errors.designation}
+          />
 
-          <FormControl fullWidth size="small" required>
+          <FormControl fullWidth size="small" required error={!!errors.division}>
             <InputLabel id="division-label">Division</InputLabel>
             <Select labelId="division-label" label="Division" value={asset.division || ''} onChange={handleChange('division')}>
               <MenuItem value="">None</MenuItem>
               {DIVISIONS.map((d) => <MenuItem key={d} value={d}>{d}</MenuItem>)}
             </Select>
+            {errors.division && <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>{errors.division}</Typography>}
           </FormControl>
 
-          <FormControl fullWidth size="small" required>
+          <FormControl fullWidth size="small" required error={!!errors.section}>
             <InputLabel id="section-label">Section</InputLabel>
             <Select labelId="section-label" label="Section" value={asset.section || ''} onChange={handleChange('section')}>
               <MenuItem value="">None</MenuItem>
               {SECTIONS.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
             </Select>
+            {errors.section && <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>{errors.section}</Typography>}
           </FormControl>
 
-          <FormControl fullWidth size="small" required>
+          <FormControl fullWidth size="small" required error={!!errors.category}>
             <InputLabel id="category-label">Category</InputLabel>
             <Select labelId="category-label" label="Category" value={asset.category || ''} onChange={handleChange('category')}>
               <MenuItem value="">None</MenuItem>
               {SAMPLE_CATEGORIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
             </Select>
+            {errors.category && <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>{errors.category}</Typography>}
           </FormControl>
 
-          <FormControl fullWidth size="small" required>
+          <FormControl fullWidth size="small" required error={!!errors.brand}>
             <InputLabel id="brand-label">Brand</InputLabel>
             <Select labelId="brand-label" label="Brand" value={asset.brand || ''} onChange={handleChange('brand')}>
               <MenuItem value="">Other</MenuItem>
               {SAMPLE_BRANDS.map((b) => <MenuItem key={b} value={b}>{b}</MenuItem>)}
             </Select>
+            {errors.brand && <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>{errors.brand}</Typography>}
           </FormControl>
 
-          <TextField required label="Model" value={asset.model || ''} onChange={handleChange('model')} />
-          <TextField required label="Serial Number" value={asset.serialNumber || ''} onChange={handleChange('serialNumber')} />
+          <TextField 
+            required 
+            label="Model" 
+            value={asset.model || ''} 
+            onChange={handleChange('model')} 
+            error={!!errors.model}
+            helperText={errors.model}
+          />
+          <TextField 
+            required 
+            label="Serial Number" 
+            value={asset.serialNumber || ''} 
+            onChange={handleChange('serialNumber')} 
+            error={!!errors.serialNumber}
+            helperText={errors.serialNumber}
+          />
           <TextField label="IP Address" value={asset.ip || ''} onChange={handleChange('ip')} />
 
           <TextField label="Processor" value={asset.processor || ''} onChange={handleChange('processor')} />
@@ -258,16 +315,32 @@ export default function ModifyAsset() {
           <TextField label="Hard Disk (GB)" type="number" value={asset.harddisk || ''} onChange={handleChange('harddisk')} />
           <TextField label="SSD (GB)" type="number" value={asset.ssd || ''} onChange={handleChange('ssd')} />
 
-          <TextField label="Vendor" value={asset.vendor || ''} onChange={handleChange('vendor')} />
+          <TextField 
+            label="Vendor" 
+            value={asset.vendor || ''} 
+            onChange={handleChange('vendor')} 
+            required 
+            error={!!errors.vendor}
+            helperText={errors.vendor}
+          />
 
-          <TextField label="Purchased Year" type="number" value={asset.purchasedYear || ''} onChange={handleChange('purchasedYear')} />
+          <TextField 
+            label="Purchased Year" 
+            type="number" 
+            value={asset.purchasedYear || ''} 
+            onChange={handleChange('purchasedYear')} 
+            required 
+            error={!!errors.purchasedYear}
+            helperText={errors.purchasedYear}
+          />
 
-          <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small" required error={!!errors.branch}>
             <InputLabel id="branch-label">Branch</InputLabel>
             <Select labelId="branch-label" label="Branch" value={asset.branch || ''} onChange={handleChange('branch')}>
               <MenuItem value="">None</MenuItem>
               {BRANCHES.map((b) => <MenuItem key={b} value={b}>{b}</MenuItem>)}
             </Select>
+            {errors.branch && <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>{errors.branch}</Typography>}
           </FormControl>
 
           <TextField label="CSC" value={asset.csc || ''} onChange={handleChange('csc')} />
@@ -282,15 +355,34 @@ export default function ModifyAsset() {
 
           <TextField fullWidth sx={{ gridColumn: 'span 2' }} label="Remarks" value={asset.remarks || ''} onChange={handleChange('remarks')} multiline rows={3} />
 
-          <FormControl fullWidth size="small">
+          <FormControl fullWidth size="small" required error={!!errors.maintenanceWarranty}>
             <InputLabel id="warranty-label">Maintenance Warranty</InputLabel>
             <Select labelId="warranty-label" label="Maintenance Warranty" value={asset.maintenanceWarranty || 'No'} onChange={handleChange('maintenanceWarranty')}>
               <MenuItem value="Yes">Yes</MenuItem>
               <MenuItem value="No">No</MenuItem>
             </Select>
+            {errors.maintenanceWarranty && <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5 }}>{errors.maintenanceWarranty}</Typography>}
           </FormControl>
-          <TextField label="Warranty Start Date" type="date" InputLabelProps={{ shrink: true }} value={asset.maintenanceWarrantyStartDate || ''} onChange={handleChange('maintenanceWarrantyStartDate')} />
-          <TextField label="Warranty End Date" type="date" InputLabelProps={{ shrink: true }} value={asset.maintenanceWarrantyEndDate || ''} onChange={handleChange('maintenanceWarrantyEndDate')} />
+          <TextField 
+            label="Warranty Start Date" 
+            type="date" 
+            InputLabelProps={{ shrink: true }} 
+            value={asset.maintenanceWarrantyStartDate || ''} 
+            onChange={handleChange('maintenanceWarrantyStartDate')} 
+            required={asset.maintenanceWarranty === 'Yes'} 
+            error={!!errors.maintenanceWarrantyStartDate}
+            helperText={errors.maintenanceWarrantyStartDate}
+          />
+          <TextField 
+            label="Warranty End Date" 
+            type="date" 
+            InputLabelProps={{ shrink: true }} 
+            value={asset.maintenanceWarrantyEndDate || ''} 
+            onChange={handleChange('maintenanceWarrantyEndDate')} 
+            required={asset.maintenanceWarranty === 'Yes'} 
+            error={!!errors.maintenanceWarrantyEndDate}
+            helperText={errors.maintenanceWarrantyEndDate}
+          />
 
           <FormControl fullWidth size="small">
             <InputLabel id="status-label">Status</InputLabel>

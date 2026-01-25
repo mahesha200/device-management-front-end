@@ -42,16 +42,6 @@ function Dashboard() {
 
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
-            title="Finance Equipment"
-            value=""
-            icon={<DevicesIcon fontSize="large" />}
-            color="#16a34a"
-            to="/assets?section=FIN"
-          />
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
             title="Other"
             value=""
             icon={<DevicesIcon fontSize="large" />}

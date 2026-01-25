@@ -273,6 +273,7 @@ export default function AssetsList() {
                         variant="outlined"
                         component={RouterLink}
                         to={`/assets/${encodeURIComponent(a.assetSerialNo)}`}
+                        disabled={a.assetSerialNo === 'NO SERIAL NO'}
                       >
                         Review
                       </Button>
@@ -281,6 +282,7 @@ export default function AssetsList() {
                         variant="outlined"
                         component={RouterLink}
                         to={`/assets/${encodeURIComponent(a.assetSerialNo)}/edit`}
+                        disabled={a.assetSerialNo === 'NO SERIAL NO'}
                       >
                         Modify
                       </Button>
