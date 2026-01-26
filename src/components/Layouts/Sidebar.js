@@ -132,7 +132,7 @@ const Sidebar = () => {
                   {item.children.map((child) => (
                     <ListItem key={child.text} disablePadding sx={{ mb: 0.5 }}>
                       <ListItemButton
-                        onClick={() => navigate(child.path)}
+                        onClick={() => navigate(child.path, { replace: true })}
                         selected={location.pathname === child.path}
                         sx={{
                           mx: 1,

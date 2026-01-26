@@ -13,7 +13,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import notificationService from '../../utils/notificationService';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 /* ---------------- Dropdown Data ---------------- */
 const CATEGORIES = ['AIO', 'CMP', 'LTP', 'MINI', 'MON', 'PRT', 'SCN', 'TV'];

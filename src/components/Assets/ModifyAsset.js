@@ -4,7 +4,7 @@ import { Box, Paper, TextField, Button, Typography, FormControl, InputLabel, Sel
 import notificationService from '../../utils/notificationService';
 import Preloader from '../common/Preloader';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 export default function ModifyAsset() {
   const { id } = useParams();

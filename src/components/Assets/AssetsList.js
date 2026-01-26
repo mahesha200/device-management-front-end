@@ -21,6 +21,9 @@ import { Link as RouterLink, useSearchParams, useNavigate } from 'react-router-d
 import notificationService from '../../utils/notificationService';
 import Preloader from '../common/Preloader';
 
+/* -------------------- Config -------------------- */
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+
 /* -------------------- Helper -------------------- */
 const displayValue = (value) => value || 'N/A';
 
@@ -51,7 +54,7 @@ export default function AssetsList() {
     floors: []
   });
 
-  /* Initialize filters from URL on mount */
+  /* Initialize filters from URL on mount and when URL changes */
   useEffect(() => {
     const section = searchParams.get('section') || '';
     const category = searchParams.get('category') || '';
@@ -64,19 +67,19 @@ export default function AssetsList() {
       brand,
       floor
     });
-  }, []);
+  }, [searchParams]);
 
   /* Fetch filter options from backend */
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/assets/filters/options');
+        const response = await fetch(`${API_BASE_URL}/assets/filters/options`);
         const result = await response.json();
         
         if (result.success) {
           setFilterOptions({
             sections: result.data.sections || [],
-            categories: result.data.categories || [],
+            categories: result.data.categories || [], 
             brands: result.data.brands || [],
             floors: result.data.floors || []
           });
@@ -108,7 +111,7 @@ export default function AssetsList() {
       if (filters.floor) params.append('floor', filters.floor);
 
       const response = await fetch(
-        `http://localhost:5000/api/assets?${params.toString()}`
+        `${API_BASE_URL}/assets?${params.toString()}`
       );
       const result = await response.json();
       
