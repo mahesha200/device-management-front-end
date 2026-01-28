@@ -4,6 +4,8 @@ import Header from './components/Layouts/Header';
 import Sidebar from './components/Layouts/Sidebar';
 import Breadcrumbs from './components/common/Breadcrumbs';
 import NotificationBar from './components/common/NotificationBar';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext';
 import DevicesIcon from '@mui/icons-material/Devices';
 import { Grid, Container, Box, Toolbar } from '@mui/material';
 import { Routes, Route, Navigate } from 'react-router-dom';
@@ -13,6 +15,7 @@ import AssetsList from './components/Assets/AssetsList';
 import AssetDetail from './components/Assets/AssetDetail';
 import AddAsset from './components/Assets/AddAsset';
 import ModifyAsset from './components/Assets/ModifyAsset';
+import UserManagement from './components/Users/UserManagement';
 import notificationService from './utils/notificationService';
 
 function Dashboard() {
@@ -54,10 +57,6 @@ function Dashboard() {
   );
 }
 
-function requireAuth() {
-  return true; // Bypass authentication for development
-}
-
 function DashboardLayout({ children, breadcrumbs }) {
   return (
     <Box sx={{ display: 'flex' }}>
@@ -92,16 +91,56 @@ function App() {
   };
 
   return (
-    <>
+    <AuthProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/assets" element={requireAuth() ? <DashboardLayout><AssetsList/></DashboardLayout> : <Navigate to="/login" replace />} />
-        <Route path="/assets/add" element={requireAuth() ? <DashboardLayout><AddAsset/></DashboardLayout> : <Navigate to="/login" replace />} />
-        <Route path="/assets/:id" element={requireAuth() ? <DashboardLayout><AssetDetail/></DashboardLayout> : <Navigate to="/login" replace />} />
-        <Route path="/assets/:id/edit" element={requireAuth() ? <DashboardLayout><ModifyAsset/></DashboardLayout> : <Navigate to="/login" replace />} />
+        <Route 
+          path="/assets" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><AssetsList/></DashboardLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/assets/add" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><AddAsset/></DashboardLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/assets/:id" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><AssetDetail/></DashboardLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/assets/:id/edit" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><ModifyAsset/></DashboardLayout>
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/users" 
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><UserManagement/></DashboardLayout>
+            </ProtectedRoute>
+          } 
+        />
         <Route
           path="/"
-          element={requireAuth() ? <DashboardLayout><Dashboard /></DashboardLayout> : <Navigate to="/login" replace />}
+          element={
+            <ProtectedRoute>
+              <DashboardLayout><Dashboard /></DashboardLayout>
+            </ProtectedRoute>
+          }
         />
       </Routes>
       
@@ -115,7 +154,7 @@ function App() {
           message={notification.message}
         />
       )}
-    </>
+    </AuthProvider>
   );
 }
 

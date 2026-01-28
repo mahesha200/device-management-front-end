@@ -19,6 +19,7 @@ import ListAltIcon from '@mui/icons-material/ListAlt';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import { useState } from 'react';
 
 const drawerWidth = 260;
@@ -26,10 +27,11 @@ const drawerWidth = 260;
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
   const [openMenus, setOpenMenus] = useState({});
 
   const handleLogout = () => {
-    localStorage.removeItem('dm_auth');
+    logout();
     navigate('/login');
   };
 
@@ -59,12 +61,7 @@ const Sidebar = () => {
       text: 'Users', 
       icon: <PeopleIcon />, 
       path: '/users' 
-    },
-    { 
-      text: 'Reports', 
-      icon: <AssessmentIcon />, 
-      path: '/reports' 
-    },
+    }
   ];
 
   return (
