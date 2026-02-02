@@ -16,9 +16,15 @@ import {
   MenuItem,
   Box,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import { Link as RouterLink, useSearchParams, useNavigate } from 'react-router-dom';
 import notificationService from '../../utils/notificationService';
+import apiService from '../../utils/apiService';
 import Preloader from '../common/Preloader';
 
 /* -------------------- Config -------------------- */
@@ -34,6 +40,8 @@ export default function AssetsList() {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [assetToDelete, setAssetToDelete] = useState(null);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -144,6 +152,40 @@ export default function AssetsList() {
     if (newFilters.floor) params.set('floor', newFilters.floor);
     
     setSearchParams(params);
+  };
+
+  const handleDeleteClick = (asset) => {
+    setAssetToDelete(asset);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!assetToDelete) return;
+
+    try {
+      await notificationService.notifyCustom('Deleting Asset', 'Please wait...', {
+        severity: 'info',
+        duration: 2000
+      });
+
+      await apiService.deleteAsset(assetToDelete.assetSerialNo);
+
+      await notificationService.notifySuccess(`Asset ${assetToDelete.assetSerialNo} deleted successfully`);
+      
+      setDeleteDialogOpen(false);
+      setAssetToDelete(null);
+      
+      // Refresh the assets list
+      fetchAssets();
+    } catch (error) {
+      console.error('Error deleting asset:', error);
+      await notificationService.notifyError(error.message || 'Failed to delete asset');
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setAssetToDelete(null);
   };
 
   /* -------------------- UI -------------------- */
@@ -289,6 +331,15 @@ export default function AssetsList() {
                       >
                         Modify
                       </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleDeleteClick(a)}
+                        disabled={a.assetSerialNo === 'NO SERIAL NO'}
+                      >
+                        Delete
+                      </Button>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -310,6 +361,34 @@ export default function AssetsList() {
           }}
         />
       </TableContainer>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          Confirm Delete
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            Are you sure you want to delete asset{' '}
+            <strong>{assetToDelete?.assetSerialNo}</strong>?
+            <br />
+            This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

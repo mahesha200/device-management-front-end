@@ -12,8 +12,7 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import notificationService from '../../utils/notificationService';
-
-const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+import apiService from '../../utils/apiService';
 
 /* ---------------- Dropdown Data ---------------- */
 const CATEGORIES = ['AIO', 'CMP', 'LTP', 'MINI', 'MON', 'PRT', 'SCN', 'TV'];
@@ -139,19 +138,7 @@ export default function AddAsset() {
         duration: 2000
       });
 
-      const response = await fetch(`${API_BASE_URL}/assets`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newAsset),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || `Failed to create asset: ${response.statusText}`);
-      }
+      const data = await apiService.createAsset(newAsset);
 
       if (data.success) {
         // Show success notification with detailed info
