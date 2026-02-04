@@ -37,7 +37,7 @@ const displayValue = (value) => value || 'N/A';
 export default function AssetsList() {
   const [assets, setAssets] = useState([]);
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -359,6 +359,7 @@ export default function AssetsList() {
             setPage(0);
             fetchAssets();
           }}
+          rowsPerPageOptions={[10, 25, 50, 100]}
         />
       </TableContainer>
 
