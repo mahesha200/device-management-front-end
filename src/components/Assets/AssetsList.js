@@ -35,6 +35,18 @@ const displayValue = (value) => value || 'N/A';
 
 /* -------------------- Component -------------------- */
 export default function AssetsList() {
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // Initialize filters from URL on first render
+  const initialFilters = {
+    section: searchParams.get('section') || '',
+    category: searchParams.get('category') || '',
+    brand: searchParams.get('brand') || '',
+    floor: searchParams.get('floor') || '',
+  };
+  const [filters, setFilters] = useState(initialFilters);
   const [assets, setAssets] = useState([]);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(50);
@@ -42,17 +54,6 @@ export default function AssetsList() {
   const [totalCount, setTotalCount] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState(null);
-
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-
-  /* Local dropdown filters */
-  const [filters, setFilters] = useState({
-    section: '',
-    category: '',
-    brand: '',
-    floor: '',
-  });
 
   /* Filter options from backend */
   const [filterOptions, setFilterOptions] = useState({
@@ -62,19 +63,21 @@ export default function AssetsList() {
     floors: []
   });
 
-  /* Initialize filters from URL on mount and when URL changes */
+  /* Update filters if URL changes (after first render) */
   useEffect(() => {
+    // Only update filters if the URL params actually change and are different from current state
     const section = searchParams.get('section') || '';
     const category = searchParams.get('category') || '';
     const brand = searchParams.get('brand') || '';
     const floor = searchParams.get('floor') || '';
-
-    setFilters({
-      section,
-      category,
-      brand,
-      floor
-    });
+    if (
+      section !== filters.section ||
+      category !== filters.category ||
+      brand !== filters.brand ||
+      floor !== filters.floor
+    ) {
+      setFilters({ section, category, brand, floor });
+    }
   }, [searchParams]);
 
   /* Fetch filter options from backend */
@@ -122,7 +125,10 @@ export default function AssetsList() {
         `${API_BASE_URL}/assets?${params.toString()}`
       );
       const result = await response.json();
-      
+
+      // Debug log: print API response and filter
+      console.log('DEBUG: Assets API response:', result, 'Current filter:', filters, 'Setting totalCount to:', result.pagination?.total);
+
       if (result.success) {
         setAssets(result.data);
         setTotalCount(result.pagination.total);
